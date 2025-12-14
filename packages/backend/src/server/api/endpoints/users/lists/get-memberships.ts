@@ -65,6 +65,8 @@ export const paramDef = {
 		limit: { type: 'integer', minimum: 1, maximum: 100, default: 30 },
 		sinceId: { type: 'string', format: 'misskey:id' },
 		untilId: { type: 'string', format: 'misskey:id' },
+		sinceDate: { type: 'integer' },
+		untilDate: { type: 'integer' },
 	},
 	required: ['listId'],
 } as const;
@@ -95,7 +97,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 				throw new ApiError(meta.errors.noSuchList);
 			}
 
-			const query = this.queryService.makePaginationQuery(this.userListMembershipsRepository.createQueryBuilder('membership'), ps.sinceId, ps.untilId)
+			const query = this.queryService.makePaginationQuery(this.userListMembershipsRepository.createQueryBuilder('membership'), ps.sinceId, ps.untilId, ps.sinceDate, ps.untilDate)
 				.andWhere('membership.userListId = :userListId', { userListId: userList.id })
 				.innerJoinAndSelect('membership.user', 'user');
 

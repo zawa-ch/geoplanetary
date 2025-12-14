@@ -63,6 +63,9 @@ type CondFormulaValueIsForeign = {
 	type: 'isForeign';
 };
 
+/**
+ * 既に指定のマニュアルロールにアサインされている場合のみ成立とする
+ */
 type CondFormulaValueRoleAssignedTo = {
 	type: 'roleAssignedTo';
 	roleId: string;
@@ -447,6 +450,11 @@ export class MiRole {
 		default: false,
 	})
 	public isExplorable: boolean;
+
+	@Column('boolean', {
+		default: false,
+	})
+	public preserveAssignmentOnMoveAccount: boolean;
 
 	@Column('boolean', {
 		default: false,

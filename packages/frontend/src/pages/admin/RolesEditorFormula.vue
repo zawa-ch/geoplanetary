@@ -6,62 +6,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <div class="_gaps">
 	<div :class="$style.header">
-		<MkSelect v-model="type" :class="$style.typeSelect">
-			<option value="isLocal">{{ i18n.ts._role._condition.isLocal }}</option>
-			<option value="isRemote">{{ i18n.ts._role._condition.isRemote }}</option>
-			<option value="isFederated">{{ i18n.ts._role._condition.isFederated }}</option>
-			<option value="isSubscribing">{{ i18n.ts._role._condition.isSubscribing }}</option>
-			<option value="isPublishing">{{ i18n.ts._role._condition.isPublishing }}</option>
-			<option value="isForeign">{{ i18n.ts._role._condition.isForeign }}</option>
-			<option value="isSuspended">{{ i18n.ts._role._condition.isSuspended }}</option>
-			<option value="isLocked">{{ i18n.ts._role._condition.isLocked }}</option>
-			<option value="isBot">{{ i18n.ts._role._condition.isBot }}</option>
-			<option value="isCat">{{ i18n.ts._role._condition.isCat }}</option>
-			<option value="isExplorable">{{ i18n.ts._role._condition.isExplorable }}</option>
-			<option value="isMfaEnabled">{{ i18n.ts._role._condition.isMfaEnabled }}</option>
-			<option value="isSecurityKeyAvailable">{{ i18n.ts._role._condition.isSecurityKeyAvailable }}</option>
-			<option value="isUsingPwlessLogin">{{ i18n.ts._role._condition.isUsingPwlessLogin }}</option>
-			<option value="isNoCrawle">{{ i18n.ts._role._condition.isNoCrawle }}</option>
-			<option value="isNoAI">{{ i18n.ts._role._condition.isNoAI }}</option>
-			<option value="roleAssignedTo">{{ i18n.ts._role._condition.roleAssignedTo }}</option>
-			<option value="usernameMatchOf">{{ i18n.ts._role._condition.usernameMatchOf }}</option>
-			<option value="usernameEntropyMoreThanOrEq">{{ i18n.ts._role._condition.usernameEntropyMoreThanOrEq }}</option>
-			<option value="usernameEntropyLessThanOrEq">{{ i18n.ts._role._condition.usernameEntropyLessThanOrEq }}</option>
-			<option value="usernameEntropyMeanMoreThanOrEq">{{ i18n.ts._role._condition.usernameEntropyMeanMoreThanOrEq }}</option>
-			<option value="usernameEntropyMeanLessThanOrEq">{{ i18n.ts._role._condition.usernameEntropyMeanLessThanOrEq }}</option>
-			<option value="nameMatchOf">{{ i18n.ts._role._condition.nameMatchOf }}</option>
-			<option value="hostMatchOf">{{ i18n.ts._role._condition.hostMatchOf }}</option>
-			<option value="nameIsDefault">{{ i18n.ts._role._condition.nameIsDefault }}</option>
-			<option value="emailVerified">{{ i18n.ts._role._condition.emailVerified }}</option>
-			<option value="emailMatchOf">{{ i18n.ts._role._condition.emailMatchOf }}</option>
-			<option value="createdLessThan">{{ i18n.ts._role._condition.createdLessThan }}</option>
-			<option value="createdMoreThan">{{ i18n.ts._role._condition.createdMoreThan }}</option>
-			<option value="loggedInLessThanOrEq">{{ i18n.ts._role._condition.loggedInLessThanOrEq }}</option>
-			<option value="loggedInMoreThanOrEq">{{ i18n.ts._role._condition.loggedInMoreThanOrEq }}</option>
-			<option value="followersLessThanOrEq">{{ i18n.ts._role._condition.followersLessThanOrEq }}</option>
-			<option value="followersMoreThanOrEq">{{ i18n.ts._role._condition.followersMoreThanOrEq }}</option>
-			<option value="followingLessThanOrEq">{{ i18n.ts._role._condition.followingLessThanOrEq }}</option>
-			<option value="followingMoreThanOrEq">{{ i18n.ts._role._condition.followingMoreThanOrEq }}</option>
-			<option value="notesLessThanOrEq">{{ i18n.ts._role._condition.notesLessThanOrEq }}</option>
-			<option value="notesMoreThanOrEq">{{ i18n.ts._role._condition.notesMoreThanOrEq }}</option>
-			<option value="avatarUnset">{{ i18n.ts._role._condition.avatarUnset }}</option>
-			<option value="avatarLikelyBlurhash">{{ i18n.ts._role._condition.avatarLikelyBlurhash }}</option>
-			<option value="bannerUnset">{{ i18n.ts._role._condition.bannerUnset }}</option>
-			<option value="bannerLikelyBlurhash">{{ i18n.ts._role._condition.bannerLikelyBlurhash }}</option>
-			<option value="hasTags">{{ i18n.ts._role._condition.hasTags }}</option>
-			<option value="tagCountIs">{{ i18n.ts._role._condition.tagCountIs }}</option>
-			<option value="tagCountMoreThanOrEq">{{ i18n.ts._role._condition.tagCountMoreThanOrEq }}</option>
-			<option value="tagCountLessThanOrEq">{{ i18n.ts._role._condition.tagCountLessThanOrEq }}</option>
-			<option value="hasTagMatchOf">{{ i18n.ts._role._condition.hasTagMatchOf }}</option>
-			<option value="hasFields">{{ i18n.ts._role._condition.hasFields }}</option>
-			<option value="fieldCountIs">{{ i18n.ts._role._condition.fieldCountIs }}</option>
-			<option value="fieldCountMoreThanOrEq">{{ i18n.ts._role._condition.fieldCountMoreThanOrEq }}</option>
-			<option value="fieldCountLessThanOrEq">{{ i18n.ts._role._condition.fieldCountLessThanOrEq }}</option>
-			<option value="hasFieldNameMatchOf">{{ i18n.ts._role._condition.hasFieldNameMatchOf }}</option>
-			<option value="hasFieldValueMatchOf">{{ i18n.ts._role._condition.hasFieldValueMatchOf }}</option>
-			<option value="and">{{ i18n.ts._role._condition.and }}</option>
-			<option value="or">{{ i18n.ts._role._condition.or }}</option>
-			<option value="not">{{ i18n.ts._role._condition.not }}</option>
+		<MkSelect v-model="type" :items="typeDef" :class="$style.typeSelect">
 		</MkSelect>
 		<button v-if="draggable" class="drag-handle _button" :class="$style.dragHandle">
 			<i class="ti ti-menu-2"></i>
@@ -106,8 +51,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<template #caption>{{ i18n.ts._role.patternEditDescription }}</template>
 	</MkInput>
 
-	<MkSelect v-else-if="type === 'roleAssignedTo'" v-model="v.roleId">
-		<option v-for="role in roles.filter(r => r.target === 'manual')" :key="role.id" :value="role.id">{{ role.name }}</option>
+	<MkSelect v-else-if="type === 'roleAssignedTo'" v-model="v.roleId" :items="assignedToDef">
 	</MkSelect>
 
 	<div v-else-if="['avatarLikelyBlurhash', 'bannerLikelyBlurhash'].includes(type)">
@@ -123,12 +67,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { computed, defineAsyncComponent, ref, watch } from 'vue';
-import { v4 as uuid } from 'uuid';
+import type { GetMkSelectValueTypesFromDef, MkSelectItem } from '@/components/MkSelect.vue';
+import { genId } from '@/utility/id.js';
 import MkInput from '@/components/MkInput.vue';
 import MkSelect from '@/components/MkSelect.vue';
 import MkButton from '@/components/MkButton.vue';
 import { i18n } from '@/i18n.js';
-import { deepClone } from '@/scripts/clone.js';
+import { deepClone } from '@/utility/clone.js';
 import { rolesCache } from '@/cache.js';
 
 const Sortable = defineAsyncComponent(() => import('vuedraggable').then(x => x.default));
@@ -156,12 +101,70 @@ watch(v, () => {
 	emit('update:modelValue', v.value);
 }, { deep: true });
 
-const type = computed({
+const typeDef = [
+	{ label: i18n.ts._role._condition.isLocal, value: 'isLocal' },
+	{ label: i18n.ts._role._condition.isRemote, value: 'isRemote' },
+	{ label: i18n.ts._role._condition.isFederated, value: 'isFederated' },
+	{ label: i18n.ts._role._condition.isSubscribing, value: 'isSubscribing' },
+	{ label: i18n.ts._role._condition.isPublishing, value: 'isPublishing' },
+	{ label: i18n.ts._role._condition.isForeign, value: 'isForeign' },
+	{ label: i18n.ts._role._condition.isSuspended, value: 'isSuspended' },
+	{ label: i18n.ts._role._condition.isLocked, value: 'isLocked' },
+	{ label: i18n.ts._role._condition.isBot, value: 'isBot' },
+	{ label: i18n.ts._role._condition.isCat, value: 'isCat' },
+	{ label: i18n.ts._role._condition.isExplorable, value: 'isExplorable' },
+	{ label: i18n.ts._role._condition.isMfaEnabled, value: 'isMfaEnabled' },
+	{ label: i18n.ts._role._condition.isSecurityKeyAvailable, value: 'isSecurityKeyAvailable' },
+	{ label: i18n.ts._role._condition.isUsingPwlessLogin, value: 'isUsingPwlessLogin' },
+	{ label: i18n.ts._role._condition.isNoCrawle, value: 'isNoCrawle' },
+	{ label: i18n.ts._role._condition.isNoAI, value: 'isNoAI' },
+	{ label: i18n.ts._role._condition.roleAssignedTo, value: 'roleAssignedTo' },
+	{ label: i18n.ts._role._condition.usernameMatchOf, value: 'usernameMatchOf' },
+	{ label: i18n.ts._role._condition.usernameEntropyMoreThanOrEq, value: 'usernameEntropyMoreThanOrEq' },
+	{ label: i18n.ts._role._condition.usernameEntropyLessThanOrEq, value: 'usernameEntropyLessThanOrEq' },
+	{ label: i18n.ts._role._condition.usernameEntropyMeanMoreThanOrEq, value: 'usernameEntropyMeanMoreThanOrEq' },
+	{ label: i18n.ts._role._condition.usernameEntropyMeanLessThanOrEq, value: 'usernameEntropyMeanLessThanOrEq' },
+	{ label: i18n.ts._role._condition.nameMatchOf, value: 'nameMatchOf' },
+	{ label: i18n.ts._role._condition.hostMatchOf, value: 'hostMatchOf' },
+	{ label: i18n.ts._role._condition.nameIsDefault, value: 'nameIsDefault' },
+	{ label: i18n.ts._role._condition.emailVerified, value: 'emailVerified' },
+	{ label: i18n.ts._role._condition.emailMatchOf, value: 'emailMatchOf' },
+	{ label: i18n.ts._role._condition.createdLessThan, value: 'createdLessThan' },
+	{ label: i18n.ts._role._condition.createdMoreThan, value: 'createdMoreThan' },
+	{ label: i18n.ts._role._condition.loggedInLessThanOrEq, value: 'loggedInLessThanOrEq' },
+	{ label: i18n.ts._role._condition.loggedInMoreThanOrEq, value: 'loggedInMoreThanOrEq' },
+	{ label: i18n.ts._role._condition.followersLessThanOrEq, value: 'followersLessThanOrEq' },
+	{ label: i18n.ts._role._condition.followersMoreThanOrEq, value: 'followersMoreThanOrEq' },
+	{ label: i18n.ts._role._condition.followingLessThanOrEq, value: 'followingLessThanOrEq' },
+	{ label: i18n.ts._role._condition.followingMoreThanOrEq, value: 'followingMoreThanOrEq' },
+	{ label: i18n.ts._role._condition.notesLessThanOrEq, value: 'notesLessThanOrEq' },
+	{ label: i18n.ts._role._condition.notesMoreThanOrEq, value: 'notesMoreThanOrEq' },
+	{ label: i18n.ts._role._condition.avatarUnset, value: 'avatarUnset' },
+	{ label: i18n.ts._role._condition.avatarLikelyBlurhash, value: 'avatarLikelyBlurhash' },
+	{ label: i18n.ts._role._condition.bannerUnset, value: 'bannerUnset' },
+	{ label: i18n.ts._role._condition.bannerLikelyBlurhash, value: 'bannerLikelyBlurhash' },
+	{ label: i18n.ts._role._condition.hasTags, value: 'hasTags' },
+	{ label: i18n.ts._role._condition.tagCountIs, value: 'tagCountIs' },
+	{ label: i18n.ts._role._condition.tagCountMoreThanOrEq, value: 'tagCountMoreThanOrEq' },
+	{ label: i18n.ts._role._condition.tagCountLessThanOrEq, value: 'tagCountLessThanOrEq' },
+	{ label: i18n.ts._role._condition.hasTagMatchOf, value: 'hasTagMatchOf' },
+	{ label: i18n.ts._role._condition.hasFields, value: 'hasFields' },
+	{ label: i18n.ts._role._condition.fieldCountIs, value: 'fieldCountIs' },
+	{ label: i18n.ts._role._condition.fieldCountMoreThanOrEq, value: 'fieldCountMoreThanOrEq' },
+	{ label: i18n.ts._role._condition.fieldCountLessThanOrEq, value: 'fieldCountLessThanOrEq' },
+	{ label: i18n.ts._role._condition.hasFieldNameMatchOf, value: 'hasFieldNameMatchOf' },
+	{ label: i18n.ts._role._condition.hasFieldValueMatchOf, value: 'hasFieldValueMatchOf' },
+	{ label: i18n.ts._role._condition.and, value: 'and' },
+	{ label: i18n.ts._role._condition.or, value: 'or' },
+	{ label: i18n.ts._role._condition.not, value: 'not' },
+] as const satisfies MkSelectItem[];
+
+const type = computed<GetMkSelectValueTypesFromDef<typeof typeDef>>({
 	get: () => v.value.type,
 	set: (t) => {
 		if (t === 'and') v.value.values = [];
 		if (t === 'or') v.value.values = [];
-		if (t === 'not') v.value.value = { id: uuid(), type: 'isRemote' };
+		if (t === 'not') v.value.value = { id: genId(), type: 'isRemote' };
 		if (t === 'roleAssignedTo') v.value.roleId = '';
 		if (t === 'usernameMatchOf') v.value.pattern = '';
 		if (t === 'usernameEntropyMoreThanOrEq') v.value.value = 47;
@@ -198,8 +201,10 @@ const type = computed({
 	},
 });
 
+const assignedToDef = computed(() => roles.filter(r => r.target === 'manual').map(r => ({ label: r.name, value: r.id })) satisfies MkSelectItem[]);
+
 function addValue() {
-	v.value.values.push({ id: uuid(), type: 'isRemote' });
+	v.value.values.push({ id: genId(), type: 'isRemote' });
 }
 
 function valuesItemUpdated(item) {

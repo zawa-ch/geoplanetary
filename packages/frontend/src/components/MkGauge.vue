@@ -39,7 +39,7 @@ const props = withDefaults(defineProps<Props>(), {
 	minValue: 0,
 	maxValue: 1,
 	color: 'var(--MI_THEME-accent)',
-	backgroundColor: 'var(--MI_THEME-X11)',
+	backgroundColor: 'light-dark(rgb(0 0 0 /.1), rgb(0 0 0 /.3))',
 	overflowColor: 'var(--MI_THEME-error)',
 	checkPositiveOverflow: true,
 	checkNegativeOverflow: true,
