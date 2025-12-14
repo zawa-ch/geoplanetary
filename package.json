@@ -4,7 +4,7 @@
 	"codename": "nasubi",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/zawa-ch/geoplanetary.git"
+		"url": "https://github.com/geoplanetary/geoplanetary.git"
 	},
 	"packageManager": "pnpm@10.24.0",
 	"workspaces": [
