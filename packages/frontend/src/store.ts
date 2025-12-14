@@ -275,6 +275,14 @@ export const store = markRaw(new Pizzax('base', {
 		where: 'device',
 		default: false,
 	},
+	postformRemainCharacterDisplay: {
+		where: 'device',
+		default: 'meter' as 'counter' | 'counterLegacy' | 'meter',
+	},
+	postformPreviewBackgroundStyle: {
+		where: 'device',
+		default: 'darken' as 'darken' | 'obliqueStripe' | 'plain',
+	},
 	enableInfiniteScroll: {
 		where: 'device',
 		default: true,
@@ -324,6 +332,10 @@ export const store = markRaw(new Pizzax('base', {
 		default: 3,
 	},
 	showNoteActionsOnlyHover: {
+		where: 'device',
+		default: false,
+	},
+	overflowLongNotes: {
 		where: 'device',
 		default: false,
 	},

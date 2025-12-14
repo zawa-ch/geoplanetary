@@ -7,10 +7,14 @@ import { Inject, Injectable } from '@nestjs/common';
 import * as Redis from 'ioredis';
 import { In } from 'typeorm';
 import { ModuleRef } from '@nestjs/core';
+import { decode } from 'blurhash';
+import { MAX_NOTE_TEXT_LENGTH } from '@/const.js';
 import type {
+	MiInstance,
 	MiMeta,
 	MiRole,
 	MiRoleAssignment,
+	MiUserProfile,
 	RoleAssignmentsRepository,
 	RolesRepository,
 	UsersRepository,
@@ -29,13 +33,24 @@ import { ModerationLogService } from '@/core/ModerationLogService.js';
 import type { Packed } from '@/misc/json-schema.js';
 import { FanoutTimelineService } from '@/core/FanoutTimelineService.js';
 import { NotificationService } from '@/core/NotificationService.js';
+import type { Config } from '@/config.js';
+import { calcEntropy } from '@/misc/string-entropy.js';
+import { FederatedInstanceService } from './FederatedInstanceService.js';
+import { UtilityService } from './UtilityService.js';
 import type { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 
 // misskey-js の rolePolicies と同期すべし
 export type RolePolicies = {
 	gtlAvailable: boolean;
 	ltlAvailable: boolean;
+	canPostNote: boolean;
+	noteLengthLimit: number;
 	canPublicNote: boolean;
+	canFederateNote: boolean;
+	canAttachFiles: boolean;
+	canReply: boolean;
+	canQuote: boolean;
+	canDirectMessage: boolean;
 	mentionLimit: number;
 	canInvite: boolean;
 	inviteLimit: number;
@@ -47,6 +62,7 @@ export type RolePolicies = {
 	canSearchUsers: boolean;
 	canUseTranslator: boolean;
 	canHideAds: boolean;
+	driveWritable: boolean;
 	driveCapacityMb: number;
 	maxFileSizeMb: number;
 	alwaysMarkNsfw: boolean;
@@ -55,8 +71,10 @@ export type RolePolicies = {
 	antennaLimit: number;
 	wordMuteLimit: number;
 	webhookLimit: number;
+	clipAvailable: boolean;
 	clipLimit: number;
 	noteEachClipsLimit: number;
+	userListAvailable: boolean;
 	userListLimit: number;
 	userEachUserListsLimit: number;
 	rateLimitFactor: number;
@@ -76,7 +94,14 @@ export type RolePolicies = {
 export const DEFAULT_POLICIES: RolePolicies = {
 	gtlAvailable: true,
 	ltlAvailable: true,
+	canPostNote: true,
+	noteLengthLimit: MAX_NOTE_TEXT_LENGTH,
 	canPublicNote: true,
+	canFederateNote: true,
+	canAttachFiles: true,
+	canReply: true,
+	canQuote: true,
+	canDirectMessage: true,
 	mentionLimit: 20,
 	canInvite: false,
 	inviteLimit: 0,
@@ -88,6 +113,7 @@ export const DEFAULT_POLICIES: RolePolicies = {
 	canSearchUsers: true,
 	canUseTranslator: true,
 	canHideAds: false,
+	driveWritable: true,
 	driveCapacityMb: 100,
 	maxFileSizeMb: 30,
 	alwaysMarkNsfw: false,
@@ -96,8 +122,10 @@ export const DEFAULT_POLICIES: RolePolicies = {
 	antennaLimit: 5,
 	wordMuteLimit: 200,
 	webhookLimit: 3,
+	clipAvailable: true,
 	clipLimit: 10,
 	noteEachClipsLimit: 200,
+	userListAvailable: true,
 	userListLimit: 10,
 	userEachUserListsLimit: 50,
 	rateLimitFactor: 1,
@@ -132,6 +160,9 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 	constructor(
 		private moduleRef: ModuleRef,
 
+		@Inject(DI.config)
+		private config: Config,
+
 		@Inject(DI.meta)
 		private meta: MiMeta,
 
@@ -155,7 +186,9 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 		private globalEventService: GlobalEventService,
 		private idService: IdService,
 		private moderationLogService: ModerationLogService,
+		private federatedInstanceService: FederatedInstanceService,
 		private fanoutTimelineService: FanoutTimelineService,
+		private utilityService: UtilityService,
 	) {
 		this.rolesCache = new MemorySingleCache<MiRole[]>(1000 * 60 * 60); // 1h
 		this.roleAssignmentByUserIdCache = new MemoryKVCache<MiRoleAssignment[]>(1000 * 60 * 5); // 5m
@@ -232,20 +265,21 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 	}
 
 	@bindThis
-	private evalCond(user: MiUser, roles: MiRole[], value: RoleCondFormulaValue): boolean {
+	private evalCond(user: MiUser | null, profile: MiUserProfile | null, instance: MiInstance | null, roles: MiRole[], value: RoleCondFormulaValue): boolean {
+		if (!user) { return false; }
 		try {
 			switch (value.type) {
 				// ～かつ～
 				case 'and': {
-					return value.values.every(v => this.evalCond(user, roles, v));
+					return value.values.every(v => this.evalCond(user, profile, instance, roles, v));
 				}
 				// ～または～
 				case 'or': {
-					return value.values.some(v => this.evalCond(user, roles, v));
+					return value.values.some(v => this.evalCond(user, profile, instance, roles, v));
 				}
 				// ～ではない
 				case 'not': {
-					return !this.evalCond(user, roles, value.value);
+					return !this.evalCond(user, profile, instance, roles, value.value);
 				}
 				// マニュアルロールがアサインされている
 				case 'roleAssignedTo': {
@@ -258,6 +292,18 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 				// リモートユーザのみ
 				case 'isRemote': {
 					return this.userEntityService.isRemoteUser(user);
+				}
+				case 'isFederated': {
+					return this.userEntityService.isRemoteUser(user) && (instance ? (instance.followersCount > 0 || instance.followingCount > 0) : false);
+				}
+				case 'isSubscribing': {
+					return this.userEntityService.isRemoteUser(user) && (instance ? (instance.followingCount > 0) : false);
+				}
+				case 'isPublishing': {
+					return this.userEntityService.isRemoteUser(user) && (instance ? (instance.followersCount > 0) : false);
+				}
+				case 'isForeign': {
+					return this.userEntityService.isRemoteUser(user) && (instance ? (instance.followersCount === 0 && instance.followingCount === 0) : true);
 				}
 				// サスペンド済みユーザである
 				case 'isSuspended': {
@@ -279,6 +325,21 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 				case 'isExplorable': {
 					return user.isExplorable;
 				}
+				case 'isMfaEnabled': {
+					return (profile?.twoFactorEnabled) ?? false;
+				}
+				case 'isSecurityKeyAvailable': {
+					return (profile?.securityKeysAvailable) ?? false;
+				}
+				case 'isUsingPwlessLogin': {
+					return (profile?.usePasswordLessLogin) ?? false;
+				}
+				case 'isNoCrawle': {
+					return (profile?.noCrawle) ?? false;
+				}
+				case 'isNoAI': {
+					return (profile?.preventAiLearning) ?? false;
+				}
 				// ユーザが作成されてから指定期間経過した
 				case 'createdLessThan': {
 					return this.idService.parse(user.id).date.getTime() > (Date.now() - (value.sec * 1000));
@@ -286,6 +347,12 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 				// ユーザが作成されてから指定期間経っていない
 				case 'createdMoreThan': {
 					return this.idService.parse(user.id).date.getTime() < (Date.now() - (value.sec * 1000));
+				}
+				case 'loggedInLessThanOrEq': {
+					return profile ? (profile.loggedInDates.length <= value.day) : false;
+				}
+				case 'loggedInMoreThanOrEq': {
+					return profile ? (profile.loggedInDates.length >= value.day) : false;
 				}
 				// フォロワー数が指定値以下
 				case 'followersLessThanOrEq': {
@@ -310,6 +377,95 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 				// ノート数が指定値以上
 				case 'notesMoreThanOrEq': {
 					return user.notesCount >= value.value;
+				}
+				case 'usernameMatchOf': {
+					return this.utilityService.isKeyWordIncluded(user.username, [value.pattern]);
+				}
+				case 'usernameEntropyMoreThanOrEq': {
+					return this.meta.usernameEntropyTable ? calcEntropy(user.username, this.meta.usernameEntropyTable) >= value.value : false;
+				}
+				case 'usernameEntropyLessThanOrEq': {
+					return this.meta.usernameEntropyTable ? calcEntropy(user.username, this.meta.usernameEntropyTable) <= value.value : false;
+				}
+				case 'usernameEntropyMeanMoreThanOrEq': {
+					return this.meta.usernameEntropyTable ? calcEntropy(user.username, this.meta.usernameEntropyTable) / user.username.length >= value.value : false;
+				}
+				case 'usernameEntropyMeanLessThanOrEq': {
+					return this.meta.usernameEntropyTable ? calcEntropy(user.username, this.meta.usernameEntropyTable) / user.username.length <= value.value : false;
+				}
+				case 'hostMatchOf': {
+					return instance !== null && this.utilityService.isKeyWordIncluded(instance.host, [value.pattern]);
+				}
+				case 'nameMatchOf': {
+					return this.utilityService.isKeyWordIncluded(user.name ?? '', [value.pattern]);
+				}
+				case 'nameIsDefault': {
+					return (user.name ?? user.username) === user.username;
+				}
+				case 'emailVerified': {
+					return (profile?.emailVerified) ?? false;
+				}
+				case 'emailMatchOf': {
+					return profile?.email ? this.utilityService.isKeyWordIncluded(profile.email, [value.pattern]) : false;
+				}
+				case 'avatarUnset': {
+					return !user.avatarId;
+				}
+				case 'avatarLikelyBlurhash': {
+					if (!user.avatarBlurhash) { return false; }
+					try {
+						const bhash = decode(user.avatarBlurhash, 5, 5);
+						const k = decode(value.hash, 5, 5);
+						return bhash.reduce((v, j, n) => v + (j >= k[n] ? j - k[n] : k[n] - j), 0) <= value.diff;
+					} catch (e) {
+						return false;
+					}
+				}
+				case 'bannerUnset': {
+					return !user.bannerId;
+				}
+				case 'bannerLikelyBlurhash': {
+					if (!user.bannerBlurhash) { return false; }
+					try {
+						const bhash = decode(user.bannerBlurhash, 5, 5);
+						const k = decode(value.hash, 5, 5);
+						return bhash.reduce((v, j, n) => v + (j >= k[n] ? j - k[n] : k[n] - j), 0) <= value.diff;
+					} catch (e) {
+						return false;
+					}
+				}
+				case 'hasTags': {
+					return user.tags.length > 0;
+				}
+				case 'tagCountIs': {
+					return (user.tags.length) === value.value;
+				}
+				case 'tagCountMoreThanOrEq': {
+					return (user.tags.length) >= value.value;
+				}
+				case 'tagCountLessThanOrEq': {
+					return (user.tags.length) <= value.value;
+				}
+				case 'hasTagMatchOf': {
+					return (user.tags).some(h => this.utilityService.isKeyWordIncluded(h, [value.pattern]));
+				}
+				case 'hasFields': {
+					return profile ? profile.fields.length > 0 : false;
+				}
+				case 'fieldCountIs': {
+					return profile ? (profile.fields.length) === value.value : false;
+				}
+				case 'fieldCountMoreThanOrEq': {
+					return profile ? (profile.fields.length) >= value.value : false;
+				}
+				case 'fieldCountLessThanOrEq': {
+					return profile ? (profile.fields.length) <= value.value : false;
+				}
+				case 'hasFieldNameMatchOf': {
+					return profile ? (profile.fields).some(h => this.utilityService.isKeyWordIncluded(h.name, [value.pattern])) : false;
+				}
+				case 'hasFieldValueMatchOf': {
+					return profile ? (profile.fields).some(h => this.utilityService.isKeyWordIncluded(h.value, [value.pattern])) : false;
 				}
 				default:
 					return false;
@@ -341,7 +497,9 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 		const assigns = await this.getUserAssigns(userId);
 		const assignedRoles = roles.filter(r => assigns.map(x => x.roleId).includes(r.id));
 		const user = roles.some(r => r.target === 'conditional') ? await this.cacheService.findUserById(userId) : null;
-		const matchedCondRoles = roles.filter(r => r.target === 'conditional' && this.evalCond(user!, assignedRoles, r.condFormula));
+		const profile = user && this.userEntityService.isLocalUser(user) ? await this.cacheService.userProfileCache.fetch(user.id) : null;
+		const instance = user ? await this.federatedInstanceService.fetch(user.host ?? this.config.host) : null;
+		const matchedCondRoles = roles.filter(r => r.target === 'conditional' && this.evalCond(user, profile, instance, assignedRoles, r.condFormula));
 		return [...assignedRoles, ...matchedCondRoles];
 	}
 
@@ -360,7 +518,9 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 		const badgeCondRoles = roles.filter(r => r.asBadge && (r.target === 'conditional'));
 		if (badgeCondRoles.length > 0) {
 			const user = roles.some(r => r.target === 'conditional') ? await this.cacheService.findUserById(userId) : null;
-			const matchedBadgeCondRoles = badgeCondRoles.filter(r => this.evalCond(user!, assignedRoles, r.condFormula));
+			const profile = user && this.userEntityService.isLocalUser(user) ? await this.cacheService.userProfileCache.fetch(user.id) : null;
+			const instance = user ? await this.federatedInstanceService.fetch(user.host ?? this.config.host) : null;
+			const matchedBadgeCondRoles = badgeCondRoles.filter(r => this.evalCond(user, profile, instance, assignedRoles, r.condFormula));
 			return [...assignedBadgeRoles, ...matchedBadgeCondRoles];
 		} else {
 			return assignedBadgeRoles;
@@ -398,11 +558,18 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 		return {
 			gtlAvailable: calc('gtlAvailable', vs => vs.some(v => v === true)),
 			ltlAvailable: calc('ltlAvailable', vs => vs.some(v => v === true)),
+			canPostNote: calc('canPostNote', vs => vs.some(v => v === true)),
+			noteLengthLimit: calc('noteLengthLimit', vs => Math.max(...vs)),
 			canPublicNote: calc('canPublicNote', vs => vs.some(v => v === true)),
+			canFederateNote: calc('canFederateNote', vs => vs.some(v => v === true)),
+			canAttachFiles: calc('canAttachFiles', vs => vs.some(v => v === true)),
+			canReply: calc('canReply', vs => vs.some(v => v === true)),
+			canQuote: calc('canQuote', vs => vs.some(v => v === true)),
+			canDirectMessage: calc('canDirectMessage', vs => vs.some(v => v === true)),
 			mentionLimit: calc('mentionLimit', vs => Math.max(...vs)),
 			canInvite: calc('canInvite', vs => vs.some(v => v === true)),
 			inviteLimit: calc('inviteLimit', vs => Math.max(...vs)),
-			inviteLimitCycle: calc('inviteLimitCycle', vs => Math.max(...vs)),
+			inviteLimitCycle: calc('inviteLimitCycle', vs => Math.min(...vs)),
 			inviteExpirationTime: calc('inviteExpirationTime', vs => Math.max(...vs)),
 			canManageCustomEmojis: calc('canManageCustomEmojis', vs => vs.some(v => v === true)),
 			canManageAvatarDecorations: calc('canManageAvatarDecorations', vs => vs.some(v => v === true)),
@@ -410,19 +577,22 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			canSearchUsers: calc('canSearchUsers', vs => vs.some(v => v === true)),
 			canUseTranslator: calc('canUseTranslator', vs => vs.some(v => v === true)),
 			canHideAds: calc('canHideAds', vs => vs.some(v => v === true)),
+			driveWritable: calc('driveWritable', vs => vs.some(v => v === true)),
 			driveCapacityMb: calc('driveCapacityMb', vs => Math.max(...vs)),
 			maxFileSizeMb: calc('maxFileSizeMb', vs => Math.max(...vs)),
-			alwaysMarkNsfw: calc('alwaysMarkNsfw', vs => vs.some(v => v === true)),
+			alwaysMarkNsfw: calc('alwaysMarkNsfw', vs => vs.every(v => v === true)),
 			canUpdateBioMedia: calc('canUpdateBioMedia', vs => vs.some(v => v === true)),
 			pinLimit: calc('pinLimit', vs => Math.max(...vs)),
 			antennaLimit: calc('antennaLimit', vs => Math.max(...vs)),
 			wordMuteLimit: calc('wordMuteLimit', vs => Math.max(...vs)),
 			webhookLimit: calc('webhookLimit', vs => Math.max(...vs)),
+			clipAvailable: calc('clipAvailable', vs => vs.some(v => v === true)),
 			clipLimit: calc('clipLimit', vs => Math.max(...vs)),
 			noteEachClipsLimit: calc('noteEachClipsLimit', vs => Math.max(...vs)),
+			userListAvailable: calc('userListAvailable', vs => vs.some(v => v === true)),
 			userListLimit: calc('userListLimit', vs => Math.max(...vs)),
 			userEachUserListsLimit: calc('userEachUserListsLimit', vs => Math.max(...vs)),
-			rateLimitFactor: calc('rateLimitFactor', vs => Math.max(...vs)),
+			rateLimitFactor: calc('rateLimitFactor', vs => Math.min(...vs)),
 			avatarDecorationLimit: calc('avatarDecorationLimit', vs => Math.max(...vs)),
 			canImportAntennas: calc('canImportAntennas', vs => vs.some(v => v === true)),
 			canImportBlocking: calc('canImportBlocking', vs => vs.some(v => v === true)),

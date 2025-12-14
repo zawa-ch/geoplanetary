@@ -135,6 +135,13 @@ function showMenu(ev: MouseEvent) {
 		action: () => {
 			hide.value = true;
 		},
+	}, {
+		text: i18n.ts.copyBlurhash,
+		icon: 'ti ti-copy',
+		action: () => {
+			copyToClipboard(props.image.blurhash);
+			os.success();
+		},
 	});
 
 	if (iAmModerator) {

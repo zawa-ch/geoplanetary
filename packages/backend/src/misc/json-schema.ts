@@ -66,6 +66,19 @@ import {
 	packedMetaLiteSchema,
 } from '@/models/json-schema/meta.js';
 import { packedUserWebhookSchema } from '@/models/json-schema/user-webhook.js';
+import {
+	packedProhibitedNoteFormulaConstantsSchema,
+	packedProhibitedNoteFormulaLogicsSchema,
+	packedProhibitedNoteFormulaNotSchema,
+	packedProhibitedNoteFormulaZeroArgSchema,
+	packedProhibitedNoteFormulaPatternMatchSchema,
+	packedProhibitedNoteFormulaAssignsRoleSchema,
+	packedProhibitedNoteFormulaCountCompSchema,
+	packedProhibitedNoteFormulaSizeCompSchema,
+	packedProhibitedNoteFormulaMD5HashMatchSchema,
+	packedProhibitedNoteFormulaBlurhashLikelySchema,
+	packedProhibitedNoteFormulaValueSchema,
+} from '@/models/json-schema/prohibitednote.js';
 import { packedSystemWebhookSchema } from '@/models/json-schema/system-webhook.js';
 import { packedAbuseReportNotificationRecipientSchema } from '@/models/json-schema/abuse-report-notification-recipient.js';
 import { packedChatMessageSchema, packedChatMessageLiteSchema, packedChatMessageLiteForRoomSchema, packedChatMessageLiteFor1on1Schema } from '@/models/json-schema/chat-message.js';
@@ -119,6 +132,17 @@ export const refs = {
 	EmojiDetailedAdmin: packedEmojiDetailedAdminSchema,
 	Flash: packedFlashSchema,
 	Signin: packedSigninSchema,
+	ProhibitedNoteFormulaConstants: packedProhibitedNoteFormulaConstantsSchema,
+	ProhibitedNoteFormulaLogics: packedProhibitedNoteFormulaLogicsSchema,
+	ProhibitedNoteFormulaNot: packedProhibitedNoteFormulaNotSchema,
+	ProhibitedNoteFormulaZeroArg: packedProhibitedNoteFormulaZeroArgSchema,
+	ProhibitedNoteFormulaPatternMatch: packedProhibitedNoteFormulaPatternMatchSchema,
+	ProhibitedNoteFormulaAssignsRole: packedProhibitedNoteFormulaAssignsRoleSchema,
+	ProhibitedNoteFormulaCountComp: packedProhibitedNoteFormulaCountCompSchema,
+	ProhibitedNoteFormulaSizeComp: packedProhibitedNoteFormulaSizeCompSchema,
+	ProhibitedNoteFormulaMD5HashMatch: packedProhibitedNoteFormulaMD5HashMatchSchema,
+	ProhibitedNoteFormulaBlurhashLikely: packedProhibitedNoteFormulaBlurhashLikelySchema,
+	ProhibitedNoteFormulaValue: packedProhibitedNoteFormulaValueSchema,
 	RoleCondFormulaLogics: packedRoleCondFormulaLogicsSchema,
 	RoleCondFormulaValueNot: packedRoleCondFormulaValueNot,
 	RoleCondFormulaValueIsLocalOrRemote: packedRoleCondFormulaValueIsLocalOrRemoteSchema,

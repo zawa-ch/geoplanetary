@@ -408,12 +408,14 @@ export function getNoteMenu(props: {
 			action: () => toggleFavorite(true),
 		}));
 
-		menuItems.push({
-			type: 'parent',
-			icon: 'ti ti-paperclip',
-			text: i18n.ts.clip,
-			children: () => getNoteClipMenu(props),
-		});
+		if ($i.policies.clipAvailable || $i.isAdmin) {
+			menuItems.push({
+				type: 'parent',
+				icon: 'ti ti-paperclip',
+				text: i18n.ts.clip,
+				children: () => getNoteClipMenu(props),
+			});
+		}
 
 		menuItems.push(statePromise.then(state => state.isMutedThread ? {
 			icon: 'ti ti-message-off',

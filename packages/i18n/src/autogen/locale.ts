@@ -269,6 +269,10 @@ export interface Locale extends ILocale {
      */
     "copyProfileUrl": string;
     /**
+     * 画像のBlurhashをコピー
+     */
+    "copyBlurhash": string;
+    /**
      * ユーザーを検索
      */
     "searchUser": string;
@@ -2129,6 +2133,10 @@ export interface Locale extends ILocale {
      */
     "showReactionsCount": string;
     /**
+     * 長いノートの内容をオーバーフローにする
+     */
+    "overflowLongNotes": string;
+    /**
      * 履歴はありません
      */
     "noHistory": string;
@@ -2336,6 +2344,38 @@ export interface Locale extends ILocale {
      * タイムライン上部に投稿フォームを表示する(チャンネル)
      */
     "showFixedPostFormInChannel": string;
+    /**
+     * 投稿フォームの文字数表示
+     */
+    "postformRemainCharacterDisplay": string;
+    /**
+     * カウンター
+     */
+    "postformRemainCharacterDisplayCounter": string;
+    /**
+     * カウンター(レガシー)
+     */
+    "postformRemainCharacterDisplayCounterLegacy": string;
+    /**
+     * メーター
+     */
+    "postformRemainCharacterDisplayMeter": string;
+    /**
+     * 投稿フォームのプレビュー背景
+     */
+    "postformPreviewBackgroundStyle": string;
+    /**
+     * 暗くする
+     */
+    "postformPreviewBackgroundStyleObliqueDarken": string;
+    /**
+     * 斜めストライプ
+     */
+    "postformPreviewBackgroundStyleObliqueStripe": string;
+    /**
+     * プレーン(レガシー)
+     */
+    "postformPreviewBackgroundStylePlain": string;
     /**
      * フォローする際、デフォルトで返信をTLに含むようにする
      */
@@ -3412,6 +3452,10 @@ export interface Locale extends ILocale {
      * 個々のノートのメニューから「ピン留め」を選択することで、ここにノートを表示しておくことができます。
      */
     "userPagePinTip": string;
+    /**
+     * 8192文字以上のノートは連合先で正しく表示されない可能性があります
+     */
+    "textLengthReachUpstreamHardLimitWarning": string;
     /**
      * 宛先に含まれていないメンションがあります
      */
@@ -4597,9 +4641,21 @@ export interface Locale extends ILocale {
      */
     "preservedUsernames": string;
     /**
-     * 予約するユーザー名を改行で列挙します。ここで指定されたユーザー名はアカウント作成時に使えなくなりますが、管理者によるアカウント作成時はこの制限を受けません。また、既に存在するアカウントも影響を受けません。
+     * 予約するユーザー名を改行で列挙します。ここで指定されたユーザー名はアカウント作成時に使えなくなりますが、管理者によるアカウント作成時はこの制限を受けません。また、既に存在するアカウントも影響を受けません。キーワードをスラッシュで囲むと正規表現になります。
      */
     "preservedUsernamesDescription": string;
+    /**
+     * 警告: 正規表現を使用する場合、入力した値に誤りがないことをダブルチェックしてください！この機能を誤って設定すると、ほとんど、もしくはすべてのユーザー名が予約され使用できなくなる可能性があります。
+     */
+    "preservedUsernamesWarning": string;
+    /**
+     * ユーザー名の情報量計算用テーブル
+     */
+    "usernameEntropyTable": string;
+    /**
+     * ユーザー名の情報量を計算するためのテーブルを指定します。内容はjsonで、すべてのアルファベット小文字、"0"、"_"を二重に要素に持つオブジェクトとして定義されます(e.g. { "_": { "_": 4.7, ... }, ... })。外側のオブジェクトが事前条件、内側のオブジェクトが事後条件を表し、それぞれの要素がその情報量(シャノン単位)を持ちます。このテーブルは一部のロールコンディションで使用されます。内容を空にすることで、設定したテーブルをクリアします。
+     */
+    "usernameEntropyTableDescription": string;
     /**
      * このファイルからノートを作成
      */
@@ -4641,11 +4697,11 @@ export interface Locale extends ILocale {
      */
     "youFollowing": string;
     /**
-     * 生成AIによる学習を拒否
+     * NoAIをレスポンスに付加
      */
     "preventAiLearning": string;
     /**
-     * 外部の文章生成AIや画像生成AIに対して、投稿したノートや画像などのコンテンツを学習の対象にしないように要求します。これはnoaiフラグをHTMLレスポンスに含めることによって実現されますが、この要求に従うかはそのAI次第であるため、学習を完全に防止するものではありません。
+     * HTMLレスポンスにnoaiフラグを付加します。これにより生成AIの学習セットに含めないよう収集ボットに要求することができます。しかし、noaiフラグはレスポンスを受け取った相手の解釈によるものであり、この要求を完全に無視することができることに留意してください。
      */
     "preventAiLearningDescription": string;
     /**
@@ -7861,6 +7917,16 @@ export interface Locale extends ILocale {
                  */
                 "description": string;
             };
+            "_mfaEnabled": {
+                /**
+                 * これでなにも怖くない？
+                 */
+                "title": string;
+                /**
+                 * 二要素認証を有効化した
+                 */
+                "description": string;
+            };
             "_bubbleGameExplodingHead": {
                 /**
                  * 🤯
@@ -8019,6 +8085,18 @@ export interface Locale extends ILocale {
          */
         "descriptionOfCanEditMembersByModerator": string;
         /**
+         * スペースで区切るとAND指定になり、キーワードをスラッシュで囲むと正規表現になります。
+         */
+        "patternEditDescription": string;
+        /**
+         * ハッシュ
+         */
+        "hash": string;
+        /**
+         * 許容する誤差
+         */
+        "allowDifference": string;
+        /**
          * 優先度
          */
         "priority": string;
@@ -8046,9 +8124,37 @@ export interface Locale extends ILocale {
              */
             "ltlAvailable": string;
             /**
+             * 投稿の許可
+             */
+            "canPostNote": string;
+            /**
+             * 投稿の最大文字数
+             */
+            "noteLengthLimit": string;
+            /**
              * パブリック投稿の許可
              */
             "canPublicNote": string;
+            /**
+             * 返信/メンションの許可
+             */
+            "canReply": string;
+            /**
+             * 引用/Renoteの許可
+             */
+            "canQuote": string;
+            /**
+             * ダイレクトメッセージの許可
+             */
+            "canDirectMessage": string;
+            /**
+             * 連合ノートの許可
+             */
+            "canFederateNote": string;
+            /**
+             * ファイル添付の許可
+             */
+            "canAttachFiles": string;
             /**
              * ノート内の最大メンション数
              */
@@ -8077,6 +8183,10 @@ export interface Locale extends ILocale {
              * アバターデコレーションの管理
              */
             "canManageAvatarDecorations": string;
+            /**
+             * ドライブに書き込み可能
+             */
+            "driveWritable": string;
             /**
              * ドライブ容量
              */
@@ -8114,6 +8224,10 @@ export interface Locale extends ILocale {
              */
             "webhookMax": string;
             /**
+             * クリップ機能の使用可否
+             */
+            "clipAvailable": string;
+            /**
              * クリップの作成可能数
              */
             "clipMax": string;
@@ -8121,6 +8235,10 @@ export interface Locale extends ILocale {
              * クリップ内のノートの最大数
              */
             "noteEachClipsMax": string;
+            /**
+             * ユーザーリスト機能の使用可否
+             */
+            "userListAvailable": string;
             /**
              * ユーザーリストの作成可能数
              */
@@ -8212,6 +8330,46 @@ export interface Locale extends ILocale {
              */
             "roleAssignedTo": string;
             /**
+             * ユーザー名が〜にマッチ
+             */
+            "usernameMatchOf": string;
+            /**
+             * ユーザー名の情報量が〜以上
+             */
+            "usernameEntropyMoreThanOrEq": string;
+            /**
+             * ユーザー名の情報量が〜以下
+             */
+            "usernameEntropyLessThanOrEq": string;
+            /**
+             * ユーザー名の文字あたりの情報量が〜以上
+             */
+            "usernameEntropyMeanMoreThanOrEq": string;
+            /**
+             * ユーザー名の文字あたりの情報量が〜以下
+             */
+            "usernameEntropyMeanLessThanOrEq": string;
+            /**
+             * ユーザーの表示名が〜にマッチ
+             */
+            "nameMatchOf": string;
+            /**
+             * ユーザーのホスト名が〜にマッチ
+             */
+            "hostMatchOf": string;
+            /**
+             * ユーザーの表示名が初期状態
+             */
+            "nameIsDefault": string;
+            /**
+             * メールアドレスを確認済み
+             */
+            "emailVerified": string;
+            /**
+             * メールアドレスが〜にマッチ
+             */
+            "emailMatchOf": string;
+            /**
              * ローカルユーザー
              */
             "isLocal": string;
@@ -8219,6 +8377,22 @@ export interface Locale extends ILocale {
              * リモートユーザー
              */
             "isRemote": string;
+            /**
+             * 連合サーバーのユーザー
+             */
+            "isFederated": string;
+            /**
+             * 購読サーバーのユーザー
+             */
+            "isSubscribing": string;
+            /**
+             * 配信サーバーのユーザー
+             */
+            "isPublishing": string;
+            /**
+             * 外部サーバーのユーザー
+             */
+            "isForeign": string;
             /**
              * 猫ユーザー
              */
@@ -8240,6 +8414,26 @@ export interface Locale extends ILocale {
              */
             "isExplorable": string;
             /**
+             * 多要素認証が有効なユーザー
+             */
+            "isMfaEnabled": string;
+            /**
+             * セキュリティキーが有効なユーザー
+             */
+            "isSecurityKeyAvailable": string;
+            /**
+             * パスワードレスログインが有効なユーザー
+             */
+            "isUsingPwlessLogin": string;
+            /**
+             * クローラーbotを拒否しているユーザー
+             */
+            "isNoCrawle": string;
+            /**
+             * NoAIポリシーのユーザー
+             */
+            "isNoAI": string;
+            /**
              * アカウント作成から～以内
              */
             "createdLessThan": string;
@@ -8247,6 +8441,14 @@ export interface Locale extends ILocale {
              * アカウント作成から～経過
              */
             "createdMoreThan": string;
+            /**
+             * ログイン日数が～以下
+             */
+            "loggedInLessThanOrEq": string;
+            /**
+             * ログイン日数が～以上
+             */
+            "loggedInMoreThanOrEq": string;
             /**
              * フォロワー数が～以下
              */
@@ -8272,6 +8474,66 @@ export interface Locale extends ILocale {
              */
             "notesMoreThanOrEq": string;
             /**
+             * アバター画像が未設定
+             */
+            "avatarUnset": string;
+            /**
+             * アバター画像のBlurhashが〜に近似
+             */
+            "avatarLikelyBlurhash": string;
+            /**
+             * バナー画像が未設定
+             */
+            "bannerUnset": string;
+            /**
+             * バナー画像のBlurhashが〜に近似
+             */
+            "bannerLikelyBlurhash": string;
+            /**
+             * タグを含む
+             */
+            "hasTags": string;
+            /**
+             * タグの数が～に一致
+             */
+            "tagCountIs": string;
+            /**
+             * タグの数が～以上
+             */
+            "tagCountMoreThanOrEq": string;
+            /**
+             * タグの数が～以下
+             */
+            "tagCountLessThanOrEq": string;
+            /**
+             * 〜にマッチするタグを含む
+             */
+            "hasTagMatchOf": string;
+            /**
+             * フィールドを持つ
+             */
+            "hasFields": string;
+            /**
+             * フィールドの数が～に一致
+             */
+            "fieldCountIs": string;
+            /**
+             * フィールドの数が～以上
+             */
+            "fieldCountMoreThanOrEq": string;
+            /**
+             * フィールドの数が～以下
+             */
+            "fieldCountLessThanOrEq": string;
+            /**
+             * ラベルが〜にマッチするフィールドを含む
+             */
+            "hasFieldNameMatchOf": string;
+            /**
+             * 内容が〜にマッチするフィールドを含む
+             */
+            "hasFieldValueMatchOf": string;
+            /**
              * ～かつ～
              */
             "and": string;
@@ -8283,6 +8545,158 @@ export interface Locale extends ILocale {
              * ～ではない
              */
             "not": string;
+        };
+    };
+    "_prohibitedNote": {
+        /**
+         * 投稿禁止ノートのパターン
+         */
+        "title": string;
+        /**
+         * パターンを評価し、真と評価されたノートを投稿できないようにします。投稿の度に評価されるため、複雑な条件を指定すると負荷が増えます。
+         */
+        "description": string;
+        /**
+         * スペースで区切るとAND指定になり、キーワードをスラッシュで囲むと正規表現になります。
+         */
+        "patternEditDescription": string;
+        /**
+         * 無効
+         */
+        "disable": string;
+        /**
+         * ハッシュ
+         */
+        "hash": string;
+        /**
+         * 許容する誤差
+         */
+        "allowDifference": string;
+        "_condition": {
+            /**
+             * 偽
+             */
+            "false_value": string;
+            /**
+             * 真
+             */
+            "true_value": string;
+            /**
+             * 〜かつ〜
+             */
+            "and": string;
+            /**
+             * 〜または〜
+             */
+            "or": string;
+            /**
+             * ～ではない
+             */
+            "not": string;
+            /**
+             * ロールにアサイン済み
+             */
+            "roleAssignedTo": string;
+            /**
+             * テキストを含む
+             */
+            "hasText": string;
+            /**
+             * テキストが〜にマッチ
+             */
+            "textMatchOf": string;
+            /**
+             * メンションを含む
+             */
+            "hasMentions": string;
+            /**
+             * メンションの個数が一致
+             */
+            "mentionCountIs": string;
+            /**
+             * メンションの個数が〜以上
+             */
+            "mentionCountMoreThanOrEq": string;
+            /**
+             * メンションの個数が〜未満
+             */
+            "mentionCountLessThan": string;
+            /**
+             * 返信
+             */
+            "isReply": string;
+            /**
+             * 引用、またはリノート
+             */
+            "isQuoted": string;
+            /**
+             * ファイルを含む
+             */
+            "hasFiles": string;
+            /**
+             * ファイルの個数が一致
+             */
+            "fileCountIs": string;
+            /**
+             * ファイルの個数が〜以上
+             */
+            "fileCountMoreThanOrEq": string;
+            /**
+             * ファイルの個数が〜未満
+             */
+            "fileCountLessThan": string;
+            /**
+             * ファイルの総サイズが〜以上
+             */
+            "fileTotalSizeMoreThanOrEq": string;
+            /**
+             * ファイルの総サイズが〜未満
+             */
+            "fileTotalSizeLessThan": string;
+            /**
+             * サイズが〜以上のファイルを含む
+             */
+            "hasFileSizeMoreThanOrEq": string;
+            /**
+             * サイズが〜未満のファイルを含む
+             */
+            "hasFileSizeLessThan": string;
+            /**
+             * MD5ハッシュが一致するファイルを含む
+             */
+            "hasFileMD5Is": string;
+            /**
+             * ブラウザで表示できないファイルを含む
+             */
+            "hasBrowserInsafe": string;
+            /**
+             * 画像を含む
+             */
+            "hasPictures": string;
+            /**
+             * 画像のBlurhashが近似するファイルを含む
+             */
+            "hasLikelyBlurhash": string;
+            /**
+             * ハッシュタグを含む
+             */
+            "hasHashtags": string;
+            /**
+             * ハッシュタグの個数が一致
+             */
+            "hashtagCountIs": string;
+            /**
+             * ハッシュタグの個数が〜以上
+             */
+            "hashtagCountMoreThanOrEq": string;
+            /**
+             * ハッシュタグの個数が〜未満
+             */
+            "hashtagCountLessThan": string;
+            /**
+             * 〜にマッチするハッシュタグを含む
+             */
+            "hasHashtagMatchOf": string;
         };
     };
     "_sensitiveMediaDetection": {

@@ -4312,7 +4312,7 @@ export type components = {
             unlockedAt: number;
         };
         /** @enum {string} */
-        AchievementName: 'notes1' | 'notes10' | 'notes100' | 'notes500' | 'notes1000' | 'notes5000' | 'notes10000' | 'notes20000' | 'notes30000' | 'notes40000' | 'notes50000' | 'notes60000' | 'notes70000' | 'notes80000' | 'notes90000' | 'notes100000' | 'login3' | 'login7' | 'login15' | 'login30' | 'login60' | 'login100' | 'login200' | 'login300' | 'login400' | 'login500' | 'login600' | 'login700' | 'login800' | 'login900' | 'login1000' | 'passedSinceAccountCreated1' | 'passedSinceAccountCreated2' | 'passedSinceAccountCreated3' | 'loggedInOnBirthday' | 'loggedInOnNewYearsDay' | 'noteClipped1' | 'noteFavorited1' | 'myNoteFavorited1' | 'profileFilled' | 'markedAsCat' | 'following1' | 'following10' | 'following50' | 'following100' | 'following300' | 'followers1' | 'followers10' | 'followers50' | 'followers100' | 'followers300' | 'followers500' | 'followers1000' | 'collectAchievements30' | 'viewAchievements3min' | 'iLoveMisskey' | 'foundTreasure' | 'client30min' | 'client60min' | 'noteDeletedWithin1min' | 'postedAtLateNight' | 'postedAt0min0sec' | 'selfQuote' | 'htl20npm' | 'viewInstanceChart' | 'outputHelloWorldOnScratchpad' | 'open3windows' | 'driveFolderCircularReference' | 'reactWithoutRead' | 'clickedClickHere' | 'justPlainLucky' | 'setNameToSyuilo' | 'cookieClicked' | 'brainDiver' | 'smashTestNotificationButton' | 'tutorialCompleted' | 'bubbleGameExplodingHead' | 'bubbleGameDoubleExplodingHead';
+        AchievementName: 'notes1' | 'notes10' | 'notes100' | 'notes500' | 'notes1000' | 'notes5000' | 'notes10000' | 'notes20000' | 'notes30000' | 'notes40000' | 'notes50000' | 'notes60000' | 'notes70000' | 'notes80000' | 'notes90000' | 'notes100000' | 'login3' | 'login7' | 'login15' | 'login30' | 'login60' | 'login100' | 'login200' | 'login300' | 'login400' | 'login500' | 'login600' | 'login700' | 'login800' | 'login900' | 'login1000' | 'passedSinceAccountCreated1' | 'passedSinceAccountCreated2' | 'passedSinceAccountCreated3' | 'loggedInOnBirthday' | 'loggedInOnNewYearsDay' | 'noteClipped1' | 'noteFavorited1' | 'myNoteFavorited1' | 'profileFilled' | 'markedAsCat' | 'following1' | 'following10' | 'following50' | 'following100' | 'following300' | 'followers1' | 'followers10' | 'followers50' | 'followers100' | 'followers300' | 'followers500' | 'followers1000' | 'collectAchievements30' | 'viewAchievements3min' | 'iLoveMisskey' | 'foundTreasure' | 'client30min' | 'client60min' | 'noteDeletedWithin1min' | 'postedAtLateNight' | 'postedAt0min0sec' | 'selfQuote' | 'htl20npm' | 'viewInstanceChart' | 'outputHelloWorldOnScratchpad' | 'open3windows' | 'driveFolderCircularReference' | 'reactWithoutRead' | 'clickedClickHere' | 'justPlainLucky' | 'setNameToSyuilo' | 'cookieClicked' | 'brainDiver' | 'smashTestNotificationButton' | 'mfaEnabled' | 'tutorialCompleted' | 'bubbleGameExplodingHead' | 'bubbleGameDoubleExplodingHead';
         Ad: {
             /**
              * Format: id
@@ -5180,6 +5180,60 @@ export type components = {
             headers: Record<string, never>;
             success: boolean;
         };
+        ProhibitedNoteFormulaConstants: {
+            /** @enum {string} */
+            type: 'true' | 'false';
+        };
+        ProhibitedNoteFormulaLogics: {
+            /** @enum {string} */
+            type: 'and' | 'or';
+            values: components['schemas']['ProhibitedNoteFormulaValue'][];
+        };
+        ProhibitedNoteFormulaNot: {
+            /** @enum {string} */
+            type: 'not';
+            value: components['schemas']['ProhibitedNoteFormulaValue'];
+        };
+        ProhibitedNoteFormulaZeroArg: {
+            /** @enum {string} */
+            type: 'hasText' | 'hasMentions' | 'isReply' | 'isQuoted' | 'hasFiles' | 'hasBrowserInsafe' | 'hasPictures' | 'hasHashtags';
+        };
+        ProhibitedNoteFormulaPatternMatch: {
+            /** @enum {string} */
+            type: 'textMatchOf' | 'hasHashtagMatchOf';
+            pattern: string | string[];
+        };
+        ProhibitedNoteFormulaAssignsRole: {
+            /** @enum {string} */
+            type: 'roleAssignedTo';
+            /**
+             * Format: id
+             * @example xxxxxxxxxx
+             */
+            roleId: string;
+        };
+        ProhibitedNoteFormulaCountComp: {
+            /** @enum {string} */
+            type: 'mentionCountIs' | 'mentionCountMoreThanOrEq' | 'mentionCountLessThan' | 'fileCountIs' | 'fileCountMoreThanOrEq' | 'fileCountLessThan' | 'hashtagCountIs' | 'hashtagCountMoreThanOrEq' | 'hashtagCountLessThan';
+            value: number;
+        };
+        ProhibitedNoteFormulaSizeComp: {
+            /** @enum {string} */
+            type: 'fileTotalSizeMoreThanOrEq' | 'fileTotalSizeLessThan' | 'hasFileSizeMoreThanOrEq' | 'hasFileSizeLessThan';
+            size: number;
+        };
+        ProhibitedNoteFormulaMD5HashMatch: {
+            /** @enum {string} */
+            type: 'hasFileMD5Is';
+            hash: string;
+        };
+        ProhibitedNoteFormulaBlurhashLikely: {
+            /** @enum {string} */
+            type: 'hasLikelyBlurhash';
+            hash: string;
+            diff: number;
+        };
+        ProhibitedNoteFormulaValue: components['schemas']['ProhibitedNoteFormulaConstants'] | components['schemas']['ProhibitedNoteFormulaLogics'] | components['schemas']['ProhibitedNoteFormulaNot'] | components['schemas']['ProhibitedNoteFormulaZeroArg'] | components['schemas']['ProhibitedNoteFormulaPatternMatch'] | components['schemas']['ProhibitedNoteFormulaAssignsRole'] | components['schemas']['ProhibitedNoteFormulaCountComp'] | components['schemas']['ProhibitedNoteFormulaSizeComp'] | components['schemas']['ProhibitedNoteFormulaMD5HashMatch'] | components['schemas']['ProhibitedNoteFormulaBlurhashLikely'];
         RoleCondFormulaLogics: {
             id: string;
             /** @enum {string} */
@@ -5195,7 +5249,7 @@ export type components = {
         RoleCondFormulaValueIsLocalOrRemote: {
             id: string;
             /** @enum {string} */
-            type: 'isLocal' | 'isRemote';
+            type: 'isLocal' | 'isRemote' | 'isFederated' | 'isSubscribing' | 'isPublishing' | 'isForeign';
         };
         RoleCondFormulaValueUserSettingBooleanSchema: {
             id: string;
@@ -5274,7 +5328,14 @@ export type components = {
         RolePolicies: {
             gtlAvailable: boolean;
             ltlAvailable: boolean;
+            canPostNote: boolean;
+            noteLengthLimit: number;
             canPublicNote: boolean;
+            canReply: boolean;
+            canQuote: boolean;
+            canDirectMessage: boolean;
+            canFederateNote: boolean;
+            canAttachFiles: boolean;
             mentionLimit: number;
             canInvite: boolean;
             inviteLimit: number;
@@ -5286,6 +5347,7 @@ export type components = {
             canSearchUsers: boolean;
             canUseTranslator: boolean;
             canHideAds: boolean;
+            driveWritable: boolean;
             driveCapacityMb: number;
             maxFileSizeMb: number;
             uploadableFileTypes: string[];
@@ -5295,8 +5357,10 @@ export type components = {
             antennaLimit: number;
             wordMuteLimit: number;
             webhookLimit: number;
+            clipAvailable: boolean;
             clipLimit: number;
             noteEachClipsLimit: number;
+            userListAvailable: boolean;
             userListLimit: number;
             userEachUserListsLimit: number;
             rateLimitFactor: number;
@@ -9386,8 +9450,11 @@ export interface operations {
                         sensitiveWords: string[];
                         prohibitedWords: string[];
                         prohibitedWordsForNameOfUser: string[];
+                        prohibitedNotePattern: components['schemas']['ProhibitedNoteFormulaValue'] | null;
                         bannedEmailDomains?: string[];
+                        bannedEmails?: string[];
                         preservedUsernames: string[];
+                        usernameEntropyTable: Record<string, never> | null;
                         hcaptchaSecretKey: string | null;
                         mcaptchaSecretKey: string | null;
                         recaptchaSecretKey: string | null;
@@ -11800,6 +11867,7 @@ export interface operations {
                         lastActiveDate: string | null;
                         moderationNote: string;
                         signins: components['schemas']['Signin'][];
+                        usernameEntropy: number | null;
                         policies: components['schemas']['RolePolicies'];
                         roles: components['schemas']['Role'][];
                         roleAssigns: {
@@ -12686,6 +12754,7 @@ export interface operations {
                     sensitiveWords?: string[] | null;
                     prohibitedWords?: string[] | null;
                     prohibitedWordsForNameOfUser?: string[] | null;
+                    prohibitedNotePattern?: Record<string, never> | null;
                     themeColor?: string | null;
                     mascotImageUrl?: string | null;
                     bannerUrl?: string | null;
@@ -12775,7 +12844,9 @@ export interface operations {
                     enableIdenticonGeneration?: boolean;
                     serverRules?: string[];
                     bannedEmailDomains?: string[];
+                    bannedEmails?: string[];
                     preservedUsernames?: string[];
+                    usernameEntropyTable?: Record<string, never> | null;
                     manifestJsonOverride?: string;
                     enableFanoutTimeline?: boolean;
                     enableFanoutTimelineDbFallback?: boolean;
@@ -24905,7 +24976,7 @@ export interface operations {
             content: {
                 'application/json': {
                     /** @enum {string} */
-                    name: 'notes1' | 'notes10' | 'notes100' | 'notes500' | 'notes1000' | 'notes5000' | 'notes10000' | 'notes20000' | 'notes30000' | 'notes40000' | 'notes50000' | 'notes60000' | 'notes70000' | 'notes80000' | 'notes90000' | 'notes100000' | 'login3' | 'login7' | 'login15' | 'login30' | 'login60' | 'login100' | 'login200' | 'login300' | 'login400' | 'login500' | 'login600' | 'login700' | 'login800' | 'login900' | 'login1000' | 'passedSinceAccountCreated1' | 'passedSinceAccountCreated2' | 'passedSinceAccountCreated3' | 'loggedInOnBirthday' | 'loggedInOnNewYearsDay' | 'noteClipped1' | 'noteFavorited1' | 'myNoteFavorited1' | 'profileFilled' | 'markedAsCat' | 'following1' | 'following10' | 'following50' | 'following100' | 'following300' | 'followers1' | 'followers10' | 'followers50' | 'followers100' | 'followers300' | 'followers500' | 'followers1000' | 'collectAchievements30' | 'viewAchievements3min' | 'iLoveMisskey' | 'foundTreasure' | 'client30min' | 'client60min' | 'noteDeletedWithin1min' | 'postedAtLateNight' | 'postedAt0min0sec' | 'selfQuote' | 'htl20npm' | 'viewInstanceChart' | 'outputHelloWorldOnScratchpad' | 'open3windows' | 'driveFolderCircularReference' | 'reactWithoutRead' | 'clickedClickHere' | 'justPlainLucky' | 'setNameToSyuilo' | 'cookieClicked' | 'brainDiver' | 'smashTestNotificationButton' | 'tutorialCompleted' | 'bubbleGameExplodingHead' | 'bubbleGameDoubleExplodingHead';
+                    name: 'notes1' | 'notes10' | 'notes100' | 'notes500' | 'notes1000' | 'notes5000' | 'notes10000' | 'notes20000' | 'notes30000' | 'notes40000' | 'notes50000' | 'notes60000' | 'notes70000' | 'notes80000' | 'notes90000' | 'notes100000' | 'login3' | 'login7' | 'login15' | 'login30' | 'login60' | 'login100' | 'login200' | 'login300' | 'login400' | 'login500' | 'login600' | 'login700' | 'login800' | 'login900' | 'login1000' | 'passedSinceAccountCreated1' | 'passedSinceAccountCreated2' | 'passedSinceAccountCreated3' | 'loggedInOnBirthday' | 'loggedInOnNewYearsDay' | 'noteClipped1' | 'noteFavorited1' | 'myNoteFavorited1' | 'profileFilled' | 'markedAsCat' | 'following1' | 'following10' | 'following50' | 'following100' | 'following300' | 'followers1' | 'followers10' | 'followers50' | 'followers100' | 'followers300' | 'followers500' | 'followers1000' | 'collectAchievements30' | 'viewAchievements3min' | 'iLoveMisskey' | 'foundTreasure' | 'client30min' | 'client60min' | 'noteDeletedWithin1min' | 'postedAtLateNight' | 'postedAt0min0sec' | 'selfQuote' | 'htl20npm' | 'viewInstanceChart' | 'outputHelloWorldOnScratchpad' | 'open3windows' | 'driveFolderCircularReference' | 'reactWithoutRead' | 'clickedClickHere' | 'justPlainLucky' | 'setNameToSyuilo' | 'cookieClicked' | 'brainDiver' | 'smashTestNotificationButton' | 'mfaEnabled' | 'tutorialCompleted' | 'bubbleGameExplodingHead' | 'bubbleGameDoubleExplodingHead';
                 };
             };
         };

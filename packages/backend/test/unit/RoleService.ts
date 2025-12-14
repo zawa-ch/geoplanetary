@@ -31,6 +31,8 @@ import { IdService } from '@/core/IdService.js';
 import { GlobalEventService } from '@/core/GlobalEventService.js';
 import { secureRndstr } from '@/misc/secure-rndstr.js';
 import { NotificationService } from '@/core/NotificationService.js';
+import { FederatedInstanceService } from '@/core/FederatedInstanceService.js';
+import { UtilityService } from '@/core/UtilityService.js';
 import { RoleCondFormulaValue } from '@/models/Role.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
 
@@ -119,6 +121,8 @@ describe('RoleService', () => {
 				CacheService,
 				IdService,
 				GlobalEventService,
+				FederatedInstanceService,
+				UtilityService,
 				UserEntityService,
 				{
 					provide: NotificationService,

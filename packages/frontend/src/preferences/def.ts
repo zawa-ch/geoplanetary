@@ -260,6 +260,12 @@ export const PREF_DEF = definePreferences({
 	showFixedPostFormInChannel: {
 		default: false,
 	},
+	postformRemainCharacterDisplay: {
+		default: 'meter' as 'counter' | 'counterLegacy' | 'meter',
+	},
+	postformPreviewBackgroundStyle: {
+		default: 'darken' as 'darken' | 'obliqueStripe' | 'plain',
+	},
 	enableInfiniteScroll: {
 		default: true,
 	},
@@ -297,6 +303,9 @@ export const PREF_DEF = definePreferences({
 		default: 2,
 	},
 	showNoteActionsOnlyHover: {
+		default: false,
+	},
+	overflowLongNotes: {
 		default: false,
 	},
 	showClipButtonInNoteFooter: {

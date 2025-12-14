@@ -189,6 +189,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 									</MkPreferenceContainer>
 								</SearchMarker>
 
+								<SearchMarker :keywords="['overflow', 'note']">
+									<MkPreferenceContainer k="overflowLongNotes">
+										<MkSwitch v-model="overflowLongNotes">
+											<template #label><SearchLabel>{{ i18n.ts.overflowLongNotes }}</SearchLabel><span class="_tips">Geoplanetary unique</span></template>
+										</MkSwitch>
+									</MkPreferenceContainer>
+								</SearchMarker>
+
 								<SearchMarker :keywords="['footer', 'action', 'clip', 'show']">
 									<MkPreferenceContainer k="showClipButtonInNoteFooter">
 										<MkSwitch v-model="showClipButtonInNoteFooter">
@@ -584,6 +592,24 @@ SPDX-License-Identifier: AGPL-3.0-only
 								<template #label><SearchLabel>{{ i18n.ts.useSystemFont }}</SearchLabel></template>
 							</MkSwitch>
 						</SearchMarker>
+
+						<SearchMarker :keywords="['postform', 'display', 'remain', 'characters', 'chars']">
+							<MkRadios v-model="postformRemainCharacterDisplay">
+								<template #label>{{ i18n.ts.postformRemainCharacterDisplay }}<span class="_tips">Geoplanetary unique</span></template>
+								<option value="counter">{{ i18n.ts.postformRemainCharacterDisplayCounter }}</option>
+								<option value="counterLegacy">{{ i18n.ts.postformRemainCharacterDisplayCounterLegacy }}</option>
+								<option value="meter">{{ i18n.ts.postformRemainCharacterDisplayMeter }}</option>
+							</MkRadios>
+						</SearchMarker>
+
+						<SearchMarker :keywords="['postform', 'preview', 'background', 'style']">
+							<MkRadios v-model="postformPreviewBackgroundStyle">
+								<template #label>{{ i18n.ts.postformPreviewBackgroundStyle }}<span class="_tips">Geoplanetary unique</span></template>
+								<option value="darken">{{ i18n.ts.postformPreviewBackgroundStyleObliqueDarken }}</option>
+								<option value="obliqueStripe">{{ i18n.ts.postformPreviewBackgroundStyleObliqueStripe }}</option>
+								<option value="plain">{{ i18n.ts.postformPreviewBackgroundStylePlain }}</option>
+							</MkRadios>
+						</SearchMarker>
 					</div>
 				</MkFolder>
 			</SearchMarker>
@@ -864,6 +890,7 @@ const keepCw = prefer.model('keepCw');
 const serverDisconnectedBehavior = prefer.model('serverDisconnectedBehavior');
 const hemisphere = prefer.model('hemisphere');
 const showNoteActionsOnlyHover = prefer.model('showNoteActionsOnlyHover');
+const overflowLongNotes = prefer.model('overflowLongNotes');
 const showClipButtonInNoteFooter = prefer.model('showClipButtonInNoteFooter');
 const collapseRenotes = prefer.model('collapseRenotes');
 const advancedMfm = prefer.model('advancedMfm');
@@ -874,6 +901,8 @@ const loadRawImages = prefer.model('loadRawImages');
 const imageNewTab = prefer.model('imageNewTab');
 const showFixedPostForm = prefer.model('showFixedPostForm');
 const showFixedPostFormInChannel = prefer.model('showFixedPostFormInChannel');
+const postformRemainCharacterDisplay = prefer.model('postformRemainCharacterDisplay');
+const postformPreviewBackgroundStyle = prefer.model('postformPreviewBackgroundStyle');
 const numberOfPageCache = prefer.model('numberOfPageCache');
 const enableInfiniteScroll = prefer.model('enableInfiniteScroll');
 const useReactionPickerForContextMenu = prefer.model('useReactionPickerForContextMenu');
@@ -946,6 +975,7 @@ watch([
 	pollingInterval,
 	enableInfiniteScroll,
 	showNoteActionsOnlyHover,
+	overflowLongNotes,
 	overridedDeviceKind,
 	alwaysConfirmFollow,
 	confirmWhenRevealingSensitiveMedia,

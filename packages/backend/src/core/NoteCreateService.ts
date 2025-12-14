@@ -54,6 +54,7 @@ import { UserBlockingService } from '@/core/UserBlockingService.js';
 import { isReply } from '@/misc/is-reply.js';
 import { trackPromise } from '@/misc/promise-tracker.js';
 import { IdentifiableError } from '@/misc/identifiable-error.js';
+import { NoteProhibitService } from '@/core/NoteProhibitService.js';
 import { CollapsedQueue } from '@/misc/collapsed-queue.js';
 import { CacheService } from '@/core/CacheService.js';
 import { isQuote, isRenote } from '@/misc/is-renote.js';
@@ -148,6 +149,11 @@ type Option = {
 @Injectable()
 export class NoteCreateService implements OnApplicationShutdown {
 	#shutdownController = new AbortController();
+	public static MatchedProhibitedPatternsError = class extends Error { };
+	public static QuoteProhibitedUserError = class extends Error { };
+	public static ReplyProhibitedUserError = class extends Error { };
+	public static DirectMessageProhibitedUserError = class extends Error { };
+	public static AttachFileProhibitedUserError = class extends Error { };
 	private updateNotesCountQueue: CollapsedQueue<MiNote['id'], number>;
 
 	constructor(
@@ -224,6 +230,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 		private utilityService: UtilityService,
 		private userBlockingService: UserBlockingService,
 		private cacheService: CacheService,
+		private noteProhibitService: NoteProhibitService,
 	) {
 		this.updateNotesCountQueue = new CollapsedQueue(process.env.NODE_ENV !== 'test' ? 60 * 1000 * 5 : 0, this.collapseNotesCount, this.performUpdateNotesCount);
 	}
@@ -255,6 +262,12 @@ export class NoteCreateService implements OnApplicationShutdown {
 		const visibleUsers = data.visibleUserIds.length > 0 ? await this.usersRepository.findBy({
 			id: In(data.visibleUserIds),
 		}) : [];
+
+		// TODO: コール回数多いAPIのためキャッシュする
+		const policies = (await this.roleService.getUserPolicies(user.id));
+		if (data.text && data.text.length > policies.noteLengthLimit) {
+			throw new IdentifiableError('8c148117-4d13-4ada-8cf3-4d6286a2bf03', 'Cannot post notes longer than your role limit.');
+		}
 
 		let files: MiDriveFile[] = [];
 		if (data.fileIds.length > 0) {
@@ -419,12 +432,13 @@ export class NoteCreateService implements OnApplicationShutdown {
 		if (data.channel != null) data.visibility = 'public';
 		if (data.channel != null) data.visibleUsers = [];
 		if (data.channel != null) data.localOnly = true;
+		const policies = await this.roleService.getUserPolicies(user.id);
 
 		if (data.visibility === 'public' && data.channel == null) {
 			const sensitiveWords = this.meta.sensitiveWords;
 			if (this.utilityService.isKeyWordIncluded(data.cw ?? data.text ?? '', sensitiveWords)) {
 				data.visibility = 'home';
-			} else if ((await this.roleService.getUserPolicies(user.id)).canPublicNote === false) {
+			} else if (policies.canPublicNote === false) {
 				data.visibility = 'home';
 			}
 		}
@@ -445,7 +459,15 @@ export class NoteCreateService implements OnApplicationShutdown {
 			data.visibility = 'home';
 		}
 
+		if (data.files && data.files.length > 0 && !policies.canAttachFiles) {
+			throw new NoteCreateService.AttachFileProhibitedUserError();
+		}
+
 		if (data.renote) {
+			// 引用/Renote可能なユーザーか調べる
+			if (policies.canQuote === false) {
+				throw new NoteCreateService.QuoteProhibitedUserError();
+			}
 			switch (data.renote.visibility) {
 				case 'public':
 					// public noteは無条件にrenote可能
@@ -498,6 +520,11 @@ export class NoteCreateService implements OnApplicationShutdown {
 			data.localOnly = true;
 		}
 
+		// 連合ノートを無効化されているローカルユーザーはローカルのみにする
+		if (!policies.canFederateNote && !user.host) {
+			data.localOnly = true;
+		}
+
 		if (data.text) {
 			if (data.text.length > DB_MAX_NOTE_TEXT_LENGTH) {
 				data.text = data.text.slice(0, DB_MAX_NOTE_TEXT_LENGTH);
@@ -536,6 +563,24 @@ export class NoteCreateService implements OnApplicationShutdown {
 
 		tags = tags.filter(tag => Array.from(tag).length <= 128).splice(0, 32);
 
+		// 返信/メンション可能なユーザーか調べる
+		// TODO リモートユーザーの自己メンションがここで引っかからないようにする
+		if (data.reply && data.reply.userId !== user.id && (!policies.canReply)) {
+			throw new NoteCreateService.ReplyProhibitedUserError();
+		}
+		if ((mentionedUsers.filter(u => user.host != null || u.id !== user.id || u.host != null).length > 0) && (!policies.canReply)) {
+			throw new NoteCreateService.ReplyProhibitedUserError();
+		}
+
+		// DM可能なユーザーか調べる
+		if (data.visibility === 'specified' && (
+			(data.visibleUsers?.filter(u => u.id !== user.id).length ?? 0) ||
+			(mentionedUsers.filter(u => user.host != null || u.id !== user.id || u.host != null).length > 0) ||
+			(data.reply && data.reply.userId !== user.id)
+		) && (!policies.canDirectMessage)) {
+			throw new NoteCreateService.DirectMessageProhibitedUserError();
+		}
+
 		if (data.reply && (user.id !== data.reply.userId) && !mentionedUsers.some(u => u.id === data.reply!.userId)) {
 			mentionedUsers.push(await this.usersRepository.findOneByOrFail({ id: data.reply!.userId }));
 		}
@@ -556,6 +601,18 @@ export class NoteCreateService implements OnApplicationShutdown {
 
 		if (mentionedUsers.length > 0 && mentionedUsers.length > (await this.roleService.getUserPolicies(user.id)).mentionLimit) {
 			throw new IdentifiableError('9f466dab-c856-48cd-9e65-ff90ff750580', 'Note contains too many mentions');
+		}
+
+		if (await this.noteProhibitService.isProhibitedNote({
+			userId: user.id,
+			text: data.text,
+			reply: data.reply ?? null,
+			renote: data.renote ?? null,
+			mentions: mentionedUsers.map(v => { return { username: v.username, host: v.host }; }),
+			hashtags: tags,
+			files: data.files ?? null,
+		})) {
+			throw new NoteCreateService.MatchedProhibitedPatternsError();
 		}
 
 		const note = await this.insertNote(user, data, tags, emojis, mentionedUsers);

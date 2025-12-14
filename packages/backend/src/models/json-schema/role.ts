@@ -52,7 +52,7 @@ export const packedRoleCondFormulaValueIsLocalOrRemoteSchema = {
 		type: {
 			type: 'string',
 			nullable: false, optional: false,
-			enum: ['isLocal', 'isRemote'],
+			enum: ['isLocal', 'isRemote', 'isFederated', 'isSubscribing', 'isPublishing', 'isForeign'],
 		},
 	},
 } as const;
@@ -137,6 +137,38 @@ export const packedRoleCondFormulaFollowersOrFollowingOrNotesSchema = {
 	},
 } as const;
 
+export const packedRoleCondFormulaValueZeroArgSchema = {
+	type: 'object',
+	properties: {
+		id: {
+			type: 'string', optional: false,
+		},
+		type: {
+			type: 'string',
+			nullable: false, optional: false,
+			enum: ['nameIsDefault'],
+		},
+	},
+} as const;
+
+export const packedRoleCondFormulaValuePatternMatchSchema = {
+	type: 'object',
+	properties: {
+		id: {
+			type: 'string', optional: false,
+		},
+		type: {
+			type: 'string',
+			nullable: false, optional: false,
+			enum: ['usernameMatchOf', 'nameMatchOf'],
+		},
+		pattern: {
+			type: 'string',
+			nullable: false, optional: false,
+		},
+	},
+} as const;
+
 export const packedRoleCondFormulaValueSchema = {
 	type: 'object',
 	oneOf: [
@@ -176,7 +208,35 @@ export const packedRolePoliciesSchema = {
 			type: 'boolean',
 			optional: false, nullable: false,
 		},
+		canPostNote: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
+		noteLengthLimit: {
+			type: 'integer',
+			optional: false, nullable: false,
+		},
 		canPublicNote: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
+		canReply: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
+		canQuote: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
+		canDirectMessage: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
+		canFederateNote: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
+		canAttachFiles: {
 			type: 'boolean',
 			optional: false, nullable: false,
 		},
@@ -224,6 +284,10 @@ export const packedRolePoliciesSchema = {
 			type: 'boolean',
 			optional: false, nullable: false,
 		},
+		driveWritable: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
 		driveCapacityMb: {
 			type: 'integer',
 			optional: false, nullable: false,
@@ -264,12 +328,20 @@ export const packedRolePoliciesSchema = {
 			type: 'integer',
 			optional: false, nullable: false,
 		},
+		clipAvailable: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
 		clipLimit: {
 			type: 'integer',
 			optional: false, nullable: false,
 		},
 		noteEachClipsLimit: {
 			type: 'integer',
+			optional: false, nullable: false,
+		},
+		userListAvailable: {
+			type: 'boolean',
 			optional: false, nullable: false,
 		},
 		userListLimit: {

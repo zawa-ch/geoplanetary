@@ -29,6 +29,7 @@ import { CollapsedQueue } from '@/misc/collapsed-queue.js';
 import { MiNote } from '@/models/Note.js';
 import { MiMeta } from '@/models/Meta.js';
 import { DI } from '@/di-symbols.js';
+import { NoteCreateService } from '@/core/NoteCreateService.js';
 import { QueueLoggerService } from '../QueueLoggerService.js';
 import type { InboxJobData } from '../types.js';
 
@@ -235,6 +236,21 @@ export class InboxProcessorService implements OnApplicationShutdown {
 				if (e.id === 'd450b8a9-48e4-4dab-ae36-f4db763fda7c') { // invalid Note
 					return e.message;
 				}
+			}
+			if (e instanceof NoteCreateService.MatchedProhibitedPatternsError) {
+				return 'matches prohibited note patterns';
+			}
+			if (e instanceof NoteCreateService.AttachFileProhibitedUserError) {
+				return 'actor cannot attach files';
+			}
+			if (e instanceof NoteCreateService.QuoteProhibitedUserError) {
+				return 'actor cannot quote';
+			}
+			if (e instanceof NoteCreateService.ReplyProhibitedUserError) {
+				return 'actor cannot reply';
+			}
+			if (e instanceof NoteCreateService.DirectMessageProhibitedUserError) {
+				return 'actor cannot direct message';
 			}
 			throw e;
 		}
