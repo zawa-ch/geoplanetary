@@ -49,11 +49,16 @@ import {
 	packedRoleCondFormulaFollowersOrFollowingOrNotesSchema,
 	packedRoleCondFormulaLogicsSchema,
 	packedRoleCondFormulaValueAssignedRoleSchema,
+	packedRoleCondFormulaValueBlurhashLikelySchema,
 	packedRoleCondFormulaValueCreatedSchema,
+	packedRoleCondFormulaValueEntropySchema,
 	packedRoleCondFormulaValueIsLocalOrRemoteSchema,
+	packedRoleCondFormulaValueLoggedInSchema,
 	packedRoleCondFormulaValueNot,
+	packedRoleCondFormulaValuePatternMatchSchema,
 	packedRoleCondFormulaValueSchema,
 	packedRoleCondFormulaValueUserSettingBooleanSchema,
+	packedRoleCondFormulaValueZeroArgSchema,
 	packedRoleLiteSchema,
 	packedRolePoliciesSchema,
 	packedRoleSchema,
@@ -64,6 +69,7 @@ import {
 	packedMetaDetailedOnlySchema,
 	packedMetaDetailedSchema,
 	packedMetaLiteSchema,
+	packedMetaClientOptionsSchema,
 } from '@/models/json-schema/meta.js';
 import { packedUserWebhookSchema } from '@/models/json-schema/user-webhook.js';
 import {
@@ -146,10 +152,15 @@ export const refs = {
 	RoleCondFormulaLogics: packedRoleCondFormulaLogicsSchema,
 	RoleCondFormulaValueNot: packedRoleCondFormulaValueNot,
 	RoleCondFormulaValueIsLocalOrRemote: packedRoleCondFormulaValueIsLocalOrRemoteSchema,
-	RoleCondFormulaValueUserSettingBooleanSchema: packedRoleCondFormulaValueUserSettingBooleanSchema,
+	RoleCondFormulaValueUserSettingBoolean: packedRoleCondFormulaValueUserSettingBooleanSchema,
 	RoleCondFormulaValueAssignedRole: packedRoleCondFormulaValueAssignedRoleSchema,
 	RoleCondFormulaValueCreated: packedRoleCondFormulaValueCreatedSchema,
+	RoleCondFormulaValueLoggedIn: packedRoleCondFormulaValueLoggedInSchema,
 	RoleCondFormulaFollowersOrFollowingOrNotes: packedRoleCondFormulaFollowersOrFollowingOrNotesSchema,
+	RoleCondFormulaValueZeroArg: packedRoleCondFormulaValueZeroArgSchema,
+	RoleCondFormulaValuePatternMatch: packedRoleCondFormulaValuePatternMatchSchema,
+	RoleCondFormulaValueEntropy: packedRoleCondFormulaValueEntropySchema,
+	RoleCondFormulaValueBlurhashLikely: packedRoleCondFormulaValueBlurhashLikelySchema,
 	RoleCondFormulaValue: packedRoleCondFormulaValueSchema,
 	RoleLite: packedRoleLiteSchema,
 	Role: packedRoleSchema,
@@ -159,6 +170,7 @@ export const refs = {
 	MetaLite: packedMetaLiteSchema,
 	MetaDetailedOnly: packedMetaDetailedOnlySchema,
 	MetaDetailed: packedMetaDetailedSchema,
+	MetaClientOptions: packedMetaClientOptionsSchema,
 	UserWebhook: packedUserWebhookSchema,
 	SystemWebhook: packedSystemWebhookSchema,
 	AbuseReportNotificationRecipient: packedAbuseReportNotificationRecipientSchema,
@@ -285,8 +297,6 @@ type ObjectSchemaTypeDef<p extends Schema> =
 					never :
 				never :
 			any;
-
-type ObjectSchemaType<p extends Schema> = NullOrUndefined<p, ObjectSchemaTypeDef<p>>;
 
 export type SchemaTypeDef<p extends Schema> =
 	p['type'] extends 'null' ? null :

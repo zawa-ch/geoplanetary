@@ -7,7 +7,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <div class="_gaps">
 	<div :class="$style.header">
 		<MkSelect v-model="type" :class="$style.typeSelect" :items="formulaTypeDef(child)"/>
-		<button v-if="draggable" class="drag-handle _button" :class="$style.dragHandle">
+		<button v-if="draggable" class="drag-handle _button" :class="$style.dragHandle" @dragstart.stop="dragStartCallback">
 			<i class="ti ti-menu-2"></i>
 		</button>
 		<button v-if="draggable" class="_button" :class="$style.remove" @click="removeSelf">
@@ -15,58 +15,55 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</button>
 	</div>
 
-	<div v-if="type === 'and' || type === 'or'" class="_gaps">
-		<Sortable
-			v-model="values" tag="div" class="_gaps" itemKey="key" handle=".drag-handle"
-			:group="{ name: 'prohibitedNoteFormula' }" :animation="150" :swapThreshold="0.5"
-		>
-			<template #item="{ element }">
+	<div v-if="formula && isLogicsValue(formula)" class="_gaps">
+		<MkDraggable v-model="children" direction="vertical" withGaps canNest manualDragStart group="prohibitedNoteFormula">
+			<template #default="{ item, dragStart }">
 				<div :class="$style.item">
 					<!-- divが無いとエラーになる https://github.com/SortableJS/vue.draggable.next/issues/189 -->
 					<ProhibitedNoteFormula
-						:modelValue="element.value" child draggable
-						@update:modelValue="updated => valuesItemUpdated(element.key, updated)" @remove="removeItem(element)"
+						:modelValue="item.value" child draggable :dragStartCallback="dragStart"
+						@update:modelValue="updated => valuesItemUpdated({id: item.id, value: updated})" @remove="removeItem(item)"
 					/>
 				</div>
 			</template>
-		</Sortable>
+		</MkDraggable>
 		<MkButton rounded style="margin: 0 auto;" @click="addValue">
 			<i class="ti ti-plus"></i> {{ i18n.ts.add }}
 		</MkButton>
 	</div>
 
-	<div v-else-if="type === 'not'" :class="$style.item">
-		<ProhibitedNoteFormula v-model="subformula" child/>
+	<div v-else-if="formula && isNotValue(formula)" :class="$style.item">
+		<ProhibitedNoteFormula v-model="formula.value" child/>
 	</div>
 
 	<MkSelect
-		v-else-if="type === 'roleAssignedTo'" v-model="roleId"
+		v-else-if="formula && isAssignsRoleValue(formula)" v-model="formula.roleId"
 		:items="roles.map((i) => { return { value: i.id, label: i.name } })"
 	/>
 
-	<MkInput v-else-if="type === 'hasFileMD5Is'" v-model="md5hash" type="text"/>
+	<MkInput v-else-if="formula && isMD5HashMatchValue(formula)" v-model="formula.hash" type="text"/>
 
 	<MkInput
-		v-else-if="['fileTotalSizeMoreThanOrEq', 'fileTotalSizeLessThan', 'hasFileSizeMoreThanOrEq', 'hasFileSizeLessThan'].includes(type)"
-		v-model="size" type="number"
+		v-else-if="formula && isSizeCompValue(formula)"
+		v-model="formula.size" type="number"
 	>
 		<template #suffix>byte</template>
 	</MkInput>
 
 	<MkInput
-		v-else-if="['mentionCountIs', 'mentionCountMoreThanOrEq', 'mentionCountLessThan', 'fileCountIs', 'fileCountMoreThanOrEq', 'fileCountLessThan', 'hashtagCountIs', 'hashtagCountMoreThanOrEq', 'hashtagCountLessThan'].includes(type)"
-		v-model="count" type="number"
+		v-else-if="formula && isCountCompValue(formula)"
+		v-model="formula.value" type="number"
 	/>
 
-	<MkTextarea v-else-if="['textMatchOf', 'hasHashtagMatchOf'].includes(type)" v-model="pattern" type="text">
+	<MkTextarea v-else-if="formula && isPatternMatchValue(formula)" v-model="pattern" type="text">
 		<template #caption>{{ i18n.ts._prohibitedNote.patternEditDescription }}</template>
 	</MkTextarea>
 
-	<div v-else-if="type === 'hasLikelyBlurhash'">
-		<MkInput v-model="blurhash" type="text">
+	<div v-else-if="formula && isBlurhashLikelyValue(formula)">
+		<MkInput v-model="formula.hash" type="text">
 			<template #label>{{ i18n.ts._prohibitedNote.hash }}</template>
 		</MkInput>
-		<MkInput v-model="blurhashdiff" type="number">
+		<MkInput v-model="formula.diff" type="number">
 			<template #label>{{ i18n.ts._prohibitedNote.allowDifference }}</template>
 		</MkInput>
 	</div>
@@ -79,17 +76,16 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import * as Misskey from 'misskey-js';
-import { computed, defineAsyncComponent, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import MkInput from '@/components/MkInput.vue';
 import MkTextarea from '@/components/MkTextarea.vue';
 import MkSelect from '@/components/MkSelect.vue';
 import MkButton from '@/components/MkButton.vue';
+import MkDraggable from '@/components/MkDraggable.vue';
 import { i18n } from '@/i18n.js';
 import { deepClone } from '@/utility/clone.js';
 import { rolesCache } from '@/cache.js';
 import { genId } from '@/utility/id';
-
-const Sortable = defineAsyncComponent(() => import('vuedraggable').then(x => x.default));
 
 const roles = await rolesCache.fetch();
 
@@ -101,6 +97,7 @@ const emit = defineEmits<{
 const props = defineProps<{
 	modelValue: Misskey.entities.ProhibitedNoteFormulaValue | null;
 	draggable?: boolean;
+	dragStartCallback?: (ev: DragEvent) => void;
 	child?: boolean;
 }>();
 
@@ -142,29 +139,24 @@ const formulaTypeDef = (child: boolean) => {
 	]);
 };
 
-function cloneModelValue() {
-	return deepClone(props.modelValue);
-}
-
-const formula = ref(cloneModelValue());
+const formula = ref<Misskey.entities.ProhibitedNoteFormulaValue | null>(null);
 const subValueKeys = ref<string[]>([]);
-if (['and', 'or'].some(t => formula.value && (t === formula.value.type))) {
-	(formula.value as Misskey.entities.ProhibitedNoteFormulaLogics).values.forEach(() => { subValueKeys.value.push(genId()); });
+
+function regenerateSubValueKeys() {
+	subValueKeys.value = formula.value && isLogicsValue(formula.value) ? formula.value.values.map(() => genId()) : [];
 }
 
-watch(() => props.modelValue, () => {
-	if (JSON.stringify(props.modelValue) === JSON.stringify(formula.value)) return;
-	subValueKeys.value = [];
-	(formula.value as Misskey.entities.ProhibitedNoteFormulaLogics).values.forEach(() => { subValueKeys.value.push(genId()); });
-	formula.value = cloneModelValue();
-}, { deep: true });
+watch(() => props.modelValue, (newValue, oldValue) => {
+	if (JSON.stringify(newValue) === JSON.stringify(oldValue)) return;
+	formula.value = deepClone(newValue);
+}, { deep: true, immediate: true });
 
 watch(formula, () => {
 	emit('update:modelValue', formula.value);
 }, { deep: true });
 
 const type = computed({
-	get: () => formula.value?.type ?? 'disable',
+	get: () => formula.value ? formula.value.type : 'disable',
 	set: (t) => {
 		switch (t) {
 			case 'true':
@@ -174,7 +166,7 @@ const type = computed({
 			}
 			case 'and':
 			case 'or': {
-				formula.value = { type: t, values: [] };
+				formula.value = { type: t, values: [{ type: 'false' }] };
 				break;
 			}
 			case 'not': {
@@ -234,33 +226,29 @@ const type = computed({
 		}
 	},
 });
+const isLogicsValue = (v: Misskey.entities.ProhibitedNoteFormulaValue): v is Misskey.entities.ProhibitedNoteFormulaLogics => ['and', 'or'].includes(v.type);
+const isNotValue = (v: Misskey.entities.ProhibitedNoteFormulaValue): v is Misskey.entities.ProhibitedNoteFormulaNot => ['not'].includes(v.type);
+const isPatternMatchValue = (v: Misskey.entities.ProhibitedNoteFormulaValue): v is Misskey.entities.ProhibitedNoteFormulaPatternMatch => ['textMatchOf', 'hasHashtagMatchOf'].includes(v.type);
+const isAssignsRoleValue = (v: Misskey.entities.ProhibitedNoteFormulaValue): v is Misskey.entities.ProhibitedNoteFormulaAssignsRole => ['roleAssignedTo'].includes(v.type);
+const isCountCompValue = (v: Misskey.entities.ProhibitedNoteFormulaValue): v is Misskey.entities.ProhibitedNoteFormulaCountComp => ['mentionCountIs', 'mentionCountMoreThanOrEq', 'mentionCountLessThan', 'fileCountIs', 'fileCountMoreThanOrEq', 'fileCountLessThan', 'hashtagCountIs', 'hashtagCountMoreThanOrEq', 'hashtagCountLessThan'].includes(v.type);
+const isSizeCompValue = (v: Misskey.entities.ProhibitedNoteFormulaValue): v is Misskey.entities.ProhibitedNoteFormulaSizeComp => ['fileTotalSizeMoreThanOrEq', 'fileTotalSizeLessThan', 'hasFileSizeMoreThanOrEq', 'hasFileSizeLessThan'].includes(v.type);
+const isMD5HashMatchValue = (v: Misskey.entities.ProhibitedNoteFormulaValue): v is Misskey.entities.ProhibitedNoteFormulaMD5HashMatch => ['hasFileMD5Is'].includes(v.type);
+const isBlurhashLikelyValue = (v: Misskey.entities.ProhibitedNoteFormulaValue): v is Misskey.entities.ProhibitedNoteFormulaBlurhashLikely => ['hasLikelyBlurhash'].includes(v.type);
 
-const values = computed({
-	get: () => (formula.value as Misskey.entities.ProhibitedNoteFormulaLogics).values.map((v, i) => { return { key: subValueKeys.value[i], value: v }; }),
-	set: (nv) => {
-		subValueKeys.value = nv.map(v => v.key);
-		(formula.value as Misskey.entities.ProhibitedNoteFormulaLogics).values = nv.map(v => v.value);
+const children = computed({
+	get: () => {
+		if (!formula.value || !isLogicsValue(formula.value)) { return []; }
+		if (subValueKeys.value.length < formula.value.values.length) {
+			regenerateSubValueKeys();
+		}
+		return formula.value.values.map((v, i) => { return { id: subValueKeys.value[i], value: v }; });
 	},
-});
-const subformula = computed({
-	get: () => (formula.value as Misskey.entities.ProhibitedNoteFormulaNot).value,
-	set: (nv) => (formula.value as Misskey.entities.ProhibitedNoteFormulaNot).value = nv,
-});
-const roleId = computed({
-	get: () => (formula.value as Misskey.entities.ProhibitedNoteFormulaAssignsRole).roleId,
-	set: (nv) => (formula.value as Misskey.entities.ProhibitedNoteFormulaAssignsRole).roleId = nv,
-});
-const md5hash = computed({
-	get: () => (formula.value as Misskey.entities.ProhibitedNoteFormulaMD5HashMatch).hash,
-	set: (nv) => (formula.value as Misskey.entities.ProhibitedNoteFormulaMD5HashMatch).hash = nv,
-});
-const size = computed({
-	get: () => (formula.value as Misskey.entities.ProhibitedNoteFormulaSizeComp).size,
-	set: (nv) => (formula.value as Misskey.entities.ProhibitedNoteFormulaSizeComp).size = nv,
-});
-const count = computed({
-	get: () => (formula.value as Misskey.entities.ProhibitedNoteFormulaCountComp).value,
-	set: (nv) => (formula.value as Misskey.entities.ProhibitedNoteFormulaCountComp).value = nv,
+	set: (nv) => {
+		if (!formula.value || !isLogicsValue(formula.value)) { return; }
+		console.debug(formula.value.values.map((v, i) => { return { id: subValueKeys.value[i], value: v }; }));
+		subValueKeys.value = nv.map(v => v.id);
+		formula.value.values = nv.map(v => v.value);
+	},
 });
 const pattern = computed({
 	get: () => {
@@ -269,32 +257,29 @@ const pattern = computed({
 	},
 	set: (nv) => (formula.value as Misskey.entities.ProhibitedNoteFormulaPatternMatch).pattern = nv.split('\n'),
 });
-const blurhash = computed({
-	get: () => (formula.value as Misskey.entities.ProhibitedNoteFormulaBlurhashLikely).hash,
-	set: (nv) => (formula.value as Misskey.entities.ProhibitedNoteFormulaBlurhashLikely).hash = nv,
-});
-const blurhashdiff = computed({
-	get: () => (formula.value as Misskey.entities.ProhibitedNoteFormulaBlurhashLikely).diff,
-	set: (nv) => (formula.value as Misskey.entities.ProhibitedNoteFormulaBlurhashLikely).diff = nv,
-});
 
 function addValue() {
-	(formula.value as Misskey.entities.ProhibitedNoteFormulaLogics).values.push({ type: 'false' });
+	if (!formula.value || !isLogicsValue(formula.value)) {
+		return;
+	}
+	formula.value.values.push({ type: 'false' });
 	subValueKeys.value.push(genId());
 }
 
-function valuesItemUpdated(key: string, value: Misskey.entities.ProhibitedNoteFormulaValue | null) {
-	const wi = subValueKeys.value.findIndex(k => k === key);
-	if (value) {
-		(formula.value as Misskey.entities.ProhibitedNoteFormulaLogics).values[wi] = value;
+function valuesItemUpdated(item: { id: string, value: Misskey.entities.ProhibitedNoteFormulaValue | null }) {
+	const wi = subValueKeys.value.findIndex(k => k === item.id);
+	if (!formula.value || !isLogicsValue(formula.value)) { return; }
+	if (item.value) {
+		formula.value.values[wi] = item.value;
+		emit('update:modelValue', formula.value);
 	} else {
-		(formula.value as Misskey.entities.ProhibitedNoteFormulaLogics).values = (formula.value as Misskey.entities.ProhibitedNoteFormulaLogics).values.filter((_, i) => i !== wi);
+		formula.value.values = formula.value.values.filter((_, i) => i !== wi);
 		subValueKeys.value = subValueKeys.value.filter((_, i) => i !== wi);
 	}
 }
 
-function removeItem(item) {
-	values.value = values.value.filter((v) => v.key !== item.key);
+function removeItem(item: { id: string, value: Misskey.entities.ProhibitedNoteFormulaValue | null }) {
+	children.value = children.value.filter((v) => v.id !== item.id);
 }
 
 function removeSelf() {
