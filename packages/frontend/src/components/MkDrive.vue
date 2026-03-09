@@ -69,7 +69,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 					v-for="(f, i) in foldersPaginator.items.value"
 					:key="f.id"
 					v-anim="i"
-					:class="$style.folder"
 					:folder="f"
 					:selectMode="select === 'folder'"
 					:isSelected="selectedFolders.some(x => x.id === f.id)"
@@ -102,7 +101,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 					>
 						<XFile
 							v-for="file in item.items" :key="file.id"
-							:class="$style.file"
 							:file="file"
 							:folder="folder"
 							:isSelected="selectedFiles.some(x => x.id === file.id)"
@@ -125,7 +123,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 			>
 				<XFile
 					v-for="file in filesPaginator.items.value" :key="file.id"
-					:class="$style.file"
 					:file="file"
 					:folder="folder"
 					:isSelected="selectedFiles.some(x => x.id === file.id)"
@@ -135,7 +132,16 @@ SPDX-License-Identifier: AGPL-3.0-only
 				/>
 			</TransitionGroup>
 
-			<MkButton v-show="filesPaginator.canFetchOlder.value" :class="$style.loadMore" primary rounded @click="filesPaginator.fetchOlder()">{{ i18n.ts.loadMore }}</MkButton>
+			<MkButton
+				v-show="canFetchFiles"
+				v-appear="shouldEnableInfiniteScroll ? fetchMoreFiles : null"
+				:class="$style.loadMore"
+				primary
+				rounded
+				@click="fetchMoreFiles"
+			>
+				{{ i18n.ts.loadMore }}
+			</MkButton>
 
 			<div v-if="filesPaginator.items.value.length == 0 && foldersPaginator.items.value.length == 0 && !fetching" :class="$style.empty">
 				<div v-if="draghover">{{ i18n.ts.dropHereToUpload }}</div>
@@ -183,10 +189,12 @@ const props = withDefaults(defineProps<{
 	type?: string;
 	multiple?: boolean;
 	select?: 'file' | 'folder' | null;
+	forceDisableInfiniteScroll?: boolean;
 }>(), {
 	initialFolder: null,
 	multiple: false,
 	select: null,
+	forceDisableInfiniteScroll: false,
 });
 
 const emit = defineEmits<{
@@ -194,6 +202,10 @@ const emit = defineEmits<{
 	(ev: 'changeSelectedFolders', v: (Misskey.entities.DriveFolder | null)[]): void;
 	(ev: 'cd', v: Misskey.entities.DriveFolder | null): void;
 }>();
+
+const shouldEnableInfiniteScroll = computed(() => {
+	return prefer.r.enableInfiniteScroll.value && !props.forceDisableInfiniteScroll;
+});
 
 const folder = ref<Misskey.entities.DriveFolder | null>(null);
 const hierarchyFolders = ref<Misskey.entities.DriveFolder[]>([]);
@@ -231,10 +243,9 @@ const filesPaginator = markRaw(new Paginator('drive/files', {
 	params: () => ({ // 自動でリロードしたくないためcomputedParamsは使わない
 		folderId: folder.value ? folder.value.id : null,
 		type: props.type,
-		sort: sortModeSelect.value,
+		sort: ['-createdAt', '+createdAt'].includes(sortModeSelect.value) ? null : sortModeSelect.value,
 	}),
 }));
-
 const foldersPaginator = markRaw(new Paginator('drive/folders', {
 	limit: 30,
 	canFetchDetection: 'limit',
@@ -242,6 +253,16 @@ const foldersPaginator = markRaw(new Paginator('drive/folders', {
 		folderId: folder.value ? folder.value.id : null,
 	}),
 }));
+
+const canFetchFiles = computed(() => !fetching.value && (filesPaginator.order.value === 'oldest' ? filesPaginator.canFetchNewer.value : filesPaginator.canFetchOlder.value));
+
+async function fetchMoreFiles() {
+	if (filesPaginator.order.value === 'oldest') {
+		filesPaginator.fetchNewer();
+	} else {
+		filesPaginator.fetchOlder();
+	}
+}
 
 const filesTimeline = makeDateGroupedTimelineComputedRef(filesPaginator.items, 'month');
 const shouldBeGroupedByDate = computed(() => ['+createdAt', '-createdAt'].includes(sortModeSelect.value));
@@ -253,10 +274,10 @@ watch(sortModeSelect, () => {
 
 async function initialize() {
 	fetching.value = true;
-	await Promise.all([
-		foldersPaginator.init(),
-		filesPaginator.init(),
-	]);
+	await foldersPaginator.reload();
+	filesPaginator.initialDirection = sortModeSelect.value === '-createdAt' ? 'newer' : 'older';
+	filesPaginator.order.value = sortModeSelect.value === '-createdAt' ? 'oldest' : 'newest';
+	await filesPaginator.reload();
 	fetching.value = false;
 }
 
@@ -475,7 +496,7 @@ function deleteFolder(folderToDelete: Misskey.entities.DriveFolder) {
 	});
 }
 
-function onFileClick(ev: MouseEvent, file: Misskey.entities.DriveFile) {
+function onFileClick(ev: PointerEvent, file: Misskey.entities.DriveFile) {
 	if (ev.shiftKey) {
 		isEditMode.value = true;
 	}
@@ -547,7 +568,7 @@ function cd(target?: Misskey.entities.DriveFolder | Misskey.entities.DriveFolder
 		folder.value = folderToMove;
 		hierarchyFolders.value = [];
 
-		const dive = folderToDive => {
+		const dive = (folderToDive: Misskey.entities.DriveFolder) => {
 			hierarchyFolders.value.unshift(folderToDive);
 			if (folderToDive.parent) dive(folderToDive.parent);
 		};
@@ -561,17 +582,19 @@ function cd(target?: Misskey.entities.DriveFolder | Misskey.entities.DriveFolder
 async function moveFilesBulk() {
 	if (selectedFiles.value.length === 0) return;
 
-	const toFolder = await selectDriveFolder(folder.value ? folder.value.id : null);
+	const { canceled, folders } = await selectDriveFolder(folder.value ? folder.value.id : null);
+
+	if (canceled) return;
 
 	await os.apiWithDialog('drive/files/move-bulk', {
 		fileIds: selectedFiles.value.map(f => f.id),
-		folderId: toFolder[0] ? toFolder[0].id : null,
+		folderId: folders[0] ? folders[0].id : null,
 	});
 
 	globalEvents.emit('driveFilesUpdated', selectedFiles.value.map(x => ({
 		...x,
-		folderId: toFolder[0] ? toFolder[0].id : null,
-		folder: toFolder[0] ?? null,
+		folderId: folders[0] ? folders[0].id : null,
+		folder: folders[0] ?? null,
 	})));
 }
 
@@ -671,11 +694,11 @@ function getMenu() {
 	return menu;
 }
 
-function showMenu(ev: MouseEvent) {
+function showMenu(ev: PointerEvent) {
 	os.popupMenu(getMenu(), (ev.currentTarget ?? ev.target ?? undefined) as HTMLElement | undefined);
 }
 
-function onContextmenu(ev: MouseEvent) {
+function onContextmenu(ev: PointerEvent) {
 	if (isDriveWritable.value) {
 		os.contextMenu(getMenu(), ev);
 	}

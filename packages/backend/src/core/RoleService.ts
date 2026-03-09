@@ -470,7 +470,7 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 				default:
 					return false;
 			}
-		} catch (err) {
+		} catch (_) {
 			// TODO: log error
 			return false;
 		}
