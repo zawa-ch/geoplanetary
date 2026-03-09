@@ -2228,10 +2228,15 @@ declare namespace entities {
         RoleCondFormulaLogics,
         RoleCondFormulaValueNot,
         RoleCondFormulaValueIsLocalOrRemote,
-        RoleCondFormulaValueUserSettingBooleanSchema,
+        RoleCondFormulaValueUserSettingBoolean,
         RoleCondFormulaValueAssignedRole,
         RoleCondFormulaValueCreated,
+        RoleCondFormulaValueLoggedIn,
         RoleCondFormulaFollowersOrFollowingOrNotes,
+        RoleCondFormulaValueZeroArg,
+        RoleCondFormulaValuePatternMatch,
+        RoleCondFormulaValueEntropy,
+        RoleCondFormulaValueBlurhashLikely,
         RoleCondFormulaValue,
         RoleLite,
         Role,
@@ -3492,16 +3497,31 @@ type RoleCondFormulaValue = components['schemas']['RoleCondFormulaValue'];
 type RoleCondFormulaValueAssignedRole = components['schemas']['RoleCondFormulaValueAssignedRole'];
 
 // @public (undocumented)
+type RoleCondFormulaValueBlurhashLikely = components['schemas']['RoleCondFormulaValueBlurhashLikely'];
+
+// @public (undocumented)
 type RoleCondFormulaValueCreated = components['schemas']['RoleCondFormulaValueCreated'];
+
+// @public (undocumented)
+type RoleCondFormulaValueEntropy = components['schemas']['RoleCondFormulaValueEntropy'];
 
 // @public (undocumented)
 type RoleCondFormulaValueIsLocalOrRemote = components['schemas']['RoleCondFormulaValueIsLocalOrRemote'];
 
 // @public (undocumented)
+type RoleCondFormulaValueLoggedIn = components['schemas']['RoleCondFormulaValueLoggedIn'];
+
+// @public (undocumented)
 type RoleCondFormulaValueNot = components['schemas']['RoleCondFormulaValueNot'];
 
 // @public (undocumented)
-type RoleCondFormulaValueUserSettingBooleanSchema = components['schemas']['RoleCondFormulaValueUserSettingBooleanSchema'];
+type RoleCondFormulaValuePatternMatch = components['schemas']['RoleCondFormulaValuePatternMatch'];
+
+// @public (undocumented)
+type RoleCondFormulaValueUserSettingBoolean = components['schemas']['RoleCondFormulaValueUserSettingBoolean'];
+
+// @public (undocumented)
+type RoleCondFormulaValueZeroArg = components['schemas']['RoleCondFormulaValueZeroArg'];
 
 // @public (undocumented)
 type RoleLite = components['schemas']['RoleLite'];

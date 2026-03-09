@@ -5287,10 +5287,10 @@ export type components = {
             /** @enum {string} */
             type: 'isLocal' | 'isRemote' | 'isFederated' | 'isSubscribing' | 'isPublishing' | 'isForeign';
         };
-        RoleCondFormulaValueUserSettingBooleanSchema: {
+        RoleCondFormulaValueUserSettingBoolean: {
             id: string;
             /** @enum {string} */
-            type: 'isSuspended' | 'isLocked' | 'isBot' | 'isCat' | 'isExplorable';
+            type: 'isSuspended' | 'isLocked' | 'isBot' | 'isCat' | 'isExplorable' | 'isNoCrawle' | 'isNoAI';
         };
         RoleCondFormulaValueAssignedRole: {
             id: string;
@@ -5308,13 +5308,43 @@ export type components = {
             type: 'createdLessThan' | 'createdMoreThan';
             sec: number;
         };
+        RoleCondFormulaValueLoggedIn: {
+            id: string;
+            /** @enum {string} */
+            type: 'loggedInMoreThanOrEq' | 'loggedInLessThanOrEq';
+            day: number;
+        };
         RoleCondFormulaFollowersOrFollowingOrNotes: {
             id: string;
             /** @enum {string} */
-            type: 'followersLessThanOrEq' | 'followersMoreThanOrEq' | 'followingLessThanOrEq' | 'followingMoreThanOrEq' | 'notesLessThanOrEq' | 'notesMoreThanOrEq';
+            type: 'followersLessThanOrEq' | 'followersMoreThanOrEq' | 'followingLessThanOrEq' | 'followingMoreThanOrEq' | 'notesLessThanOrEq' | 'notesMoreThanOrEq' | 'tagCountIs' | 'tagCountMoreThanOrEq' | 'tagCountLessThanOrEq' | 'fieldCountIs' | 'fieldCountMoreThanOrEq' | 'fieldCountLessThanOrEq';
             value: number;
         };
-        RoleCondFormulaValue: components['schemas']['RoleCondFormulaLogics'] | components['schemas']['RoleCondFormulaValueNot'] | components['schemas']['RoleCondFormulaValueIsLocalOrRemote'] | components['schemas']['RoleCondFormulaValueUserSettingBooleanSchema'] | components['schemas']['RoleCondFormulaValueAssignedRole'] | components['schemas']['RoleCondFormulaValueCreated'] | components['schemas']['RoleCondFormulaFollowersOrFollowingOrNotes'];
+        RoleCondFormulaValueZeroArg: {
+            id: string;
+            /** @enum {string} */
+            type: 'nameIsDefault' | 'isMfaEnabled' | 'isSecurityKeyAvailable' | 'isUsingPwlessLogin' | 'emailVerified' | 'avatarUnset' | 'bannerUnset' | 'hasTags' | 'hasFields';
+        };
+        RoleCondFormulaValuePatternMatch: {
+            id: string;
+            /** @enum {string} */
+            type: 'usernameMatchOf' | 'nameMatchOf' | 'hostMatchOf' | 'emailMatchOf' | 'hasTagMatchOf' | 'hasFieldNameMatchOf' | 'hasFieldValueMatchOf';
+            pattern: string;
+        };
+        RoleCondFormulaValueEntropy: {
+            id: string;
+            /** @enum {string} */
+            type: 'usernameEntropyMoreThanOrEq' | 'usernameEntropyLessThanOrEq' | 'usernameEntropyMeanMoreThanOrEq' | 'usernameEntropyMeanLessThanOrEq';
+            value: number;
+        };
+        RoleCondFormulaValueBlurhashLikely: {
+            id: string;
+            /** @enum {string} */
+            type: 'avatarLikelyBlurhash' | 'bannerLikelyBlurhash';
+            hash: string;
+            diff: number;
+        };
+        RoleCondFormulaValue: components['schemas']['RoleCondFormulaLogics'] | components['schemas']['RoleCondFormulaValueNot'] | components['schemas']['RoleCondFormulaValueIsLocalOrRemote'] | components['schemas']['RoleCondFormulaValueUserSettingBoolean'] | components['schemas']['RoleCondFormulaValueAssignedRole'] | components['schemas']['RoleCondFormulaValueCreated'] | components['schemas']['RoleCondFormulaValueLoggedIn'] | components['schemas']['RoleCondFormulaFollowersOrFollowingOrNotes'] | components['schemas']['RoleCondFormulaValueZeroArg'] | components['schemas']['RoleCondFormulaValuePatternMatch'] | components['schemas']['RoleCondFormulaValueEntropy'] | components['schemas']['RoleCondFormulaValueBlurhashLikely'];
         RoleLite: {
             /**
              * Format: id
@@ -5367,11 +5397,11 @@ export type components = {
             canPostNote: boolean;
             noteLengthLimit: number;
             canPublicNote: boolean;
+            canFederateNote: boolean;
+            canAttachFiles: boolean;
             canReply: boolean;
             canQuote: boolean;
             canDirectMessage: boolean;
-            canFederateNote: boolean;
-            canAttachFiles: boolean;
             mentionLimit: number;
             canInvite: boolean;
             inviteLimit: number;
@@ -5386,7 +5416,6 @@ export type components = {
             driveWritable: boolean;
             driveCapacityMb: number;
             maxFileSizeMb: number;
-            uploadableFileTypes: string[];
             alwaysMarkNsfw: boolean;
             canUpdateBioMedia: boolean;
             pinLimit: number;
@@ -5408,6 +5437,7 @@ export type components = {
             canImportUserLists: boolean;
             /** @enum {string} */
             chatAvailability: 'available' | 'readonly' | 'unavailable';
+            uploadableFileTypes: string[];
             noteDraftLimit: number;
             scheduledNoteLimit: number;
             watermarkAvailable: boolean;

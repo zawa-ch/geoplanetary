@@ -49,25 +49,25 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<template #suffix>sec</template>
 	</MkInput>
 
-	<MkInput v-else-if="type === 'loggedInMoreThanOrEq' || type === 'loggedInLessThanOrEq'" v-model="v.day" type="number">
+	<MkInput v-else-if="v.type === 'loggedInMoreThanOrEq' || v.type === 'loggedInLessThanOrEq'" v-model="v.day" type="number">
 		<template #suffix>day</template>
 	</MkInput>
 
-	<MkInput v-else-if="['usernameEntropyMoreThanOrEq', 'usernameEntropyLessThanOrEq', 'usernameEntropyMeanMoreThanOrEq', 'usernameEntropyMeanLessThanOrEq'].includes(type)" v-model="v.value" :min="0" :step="0.1" type="number">
+	<MkInput v-else-if="v.type === 'usernameEntropyMoreThanOrEq' || v.type ==='usernameEntropyLessThanOrEq' || v.type ==='usernameEntropyMeanMoreThanOrEq' || v.type ==='usernameEntropyMeanLessThanOrEq'" v-model="v.value" :min="0" :step="0.1" type="number">
 		<template #suffix>bit</template>
 	</MkInput>
 
-	<MkInput v-else-if="v.type === 'followersLessThanOrEq' || v.type === 'followersMoreThanOrEq' || v.type === 'followingLessThanOrEq' || v.type === 'followingMoreThanOrEq' || v.type === 'notesLessThanOrEq' || v.type === 'notesMoreThanOrEq' || v.type === 'tagCountIs' || v.type === 'tagCountMoreThanOrEq' || v.type === 'tagCountLessThanOrEq' || v.type === 'fieldCountIs' || v.type === 'fieldCountMoreThanOrEq' || v.type === 'fieldCountLessThan'" v-model="v.value" type="number">
+	<MkInput v-else-if="v.type === 'followersLessThanOrEq' || v.type === 'followersMoreThanOrEq' || v.type === 'followingLessThanOrEq' || v.type === 'followingMoreThanOrEq' || v.type === 'notesLessThanOrEq' || v.type === 'notesMoreThanOrEq' || v.type === 'tagCountIs' || v.type === 'tagCountMoreThanOrEq' || v.type === 'tagCountLessThanOrEq' || v.type === 'fieldCountIs' || v.type === 'fieldCountMoreThanOrEq' || v.type === 'fieldCountLessThanOrEq'" v-model="v.value" type="number">
 	</MkInput>
 
-	<MkInput v-else-if="['usernameMatchOf', 'nameMatchOf', 'hostMatchOf', 'hasTagMatchOf', 'emailMatchOf', 'hasFieldNameMatchOf', 'hasFieldValueMatchOf'].includes(type)" v-model="v.pattern" type="text">
+	<MkInput v-else-if="v.type === 'usernameMatchOf' || v.type ==='nameMatchOf' || v.type ==='hostMatchOf' || v.type ==='hasTagMatchOf' || v.type ==='emailMatchOf' || v.type ==='hasFieldNameMatchOf' || v.type ==='hasFieldValueMatchOf'" v-model="v.pattern" type="text">
 		<template #caption>{{ i18n.ts._role.patternEditDescription }}</template>
 	</MkInput>
 
 	<MkSelect v-else-if="v.type === 'roleAssignedTo'" v-model="v.roleId" :items="assignedToDef">
 	</MkSelect>
 
-	<div v-else-if="['avatarLikelyBlurhash', 'bannerLikelyBlurhash'].includes(type)">
+	<div v-else-if="v.type === 'avatarLikelyBlurhash' || v.type === 'bannerLikelyBlurhash'">
 		<MkInput v-model="v.hash" type="text">
 			<template #label>{{ i18n.ts._role.hash }}</template>
 		</MkInput>
@@ -198,8 +198,8 @@ const typeModelForMkSelect = computed<GetMkSelectValueTypesFromDef<typeof typeDe
 			case 'emailMatchOf': newValue = { type: 'emailMatchOf', pattern: '' }; break;
 			case 'createdLessThan': newValue = { type: 'createdLessThan', sec: 86400 }; break;
 			case 'createdMoreThan': newValue = { type: 'createdMoreThan', sec: 86400 }; break;
-			case 'loggedInMoreThanOrEq': newValue = { type: 'loggedInMoreThanOrEq', sec: 10 }; break;
-			case 'loggedInLessThanOrEq': newValue = { type: 'loggedInLessThanOrEq', sec: 10 }; break;
+			case 'loggedInMoreThanOrEq': newValue = { type: 'loggedInMoreThanOrEq', day: 10 }; break;
+			case 'loggedInLessThanOrEq': newValue = { type: 'loggedInLessThanOrEq', day: 10 }; break;
 			case 'followersLessThanOrEq': newValue = { type: 'followersLessThanOrEq', value: 10 }; break;
 			case 'followersMoreThanOrEq': newValue = { type: 'followersMoreThanOrEq', value: 10 }; break;
 			case 'followingLessThanOrEq': newValue = { type: 'followingLessThanOrEq', value: 10 }; break;
@@ -214,7 +214,7 @@ const typeModelForMkSelect = computed<GetMkSelectValueTypesFromDef<typeof typeDe
 			case 'hasTagMatchOf': newValue = { type: 'hasTagMatchOf', pattern: '' }; break;
 			case 'fieldCountIs': newValue = { type: 'fieldCountIs', value: 10 }; break;
 			case 'fieldCountMoreThanOrEq': newValue = { type: 'fieldCountMoreThanOrEq', value: 10 }; break;
-			case 'fieldCountLessThan': newValue = { type: 'fieldCountLessThan', value: 10 }; break;
+			case 'fieldCountLessThanOrEq': newValue = { type: 'fieldCountLessThanOrEq', value: 10 }; break;
 			case 'hasFieldNameMatchOf': newValue = { type: 'hasFieldNameMatchOf', pattern: '' }; break;
 			case 'hasFieldValueMatchOf': newValue = { type: 'hasFieldValueMatchOf', pattern: '' }; break;
 			default: newValue = { type: t }; break;
