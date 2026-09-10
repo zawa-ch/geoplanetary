@@ -43,9 +43,22 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 						<div class="_gaps">
 							<MkTextarea v-model="preservedUsernames">
-								<template #caption>{{ i18n.ts.preservedUsernamesDescription }}</template>
+								<template #caption>{{ i18n.ts.preservedUsernamesDescription }}<br/><b>{{ i18n.ts.preservedUsernamesWarning }}</b></template>
 							</MkTextarea>
 							<MkButton primary @click="save_preservedUsernames">{{ i18n.ts.save }}</MkButton>
+						</div>
+					</MkFolder>
+				</SearchMarker>
+
+				<SearchMarker :keywords="['entropy', 'usernames']">
+					<MkFolder>
+						<template #label>{{ i18n.ts.usernameEntropyTable }}</template>
+
+						<div class="_gaps">
+							<MkTextarea v-model="usernameEntropyTable">
+								<template #caption>{{ i18n.ts.usernameEntropyTableDescription }}</template>
+							</MkTextarea>
+							<MkButton primary @click="save_usernameEntropyTable">{{ i18n.ts.save }}</MkButton>
 						</div>
 					</MkFolder>
 				</SearchMarker>
@@ -106,6 +119,20 @@ SPDX-License-Identifier: AGPL-3.0-only
 					</MkFolder>
 				</SearchMarker>
 
+				<SearchMarker :keywords="['prohibited', 'note', 'pattern']">
+					<MkFolder>
+						<template #icon><i class="ti ti-ban"></i></template>
+						<template #label>{{ i18n.ts._prohibitedNote.title }}</template>
+
+						<div class="_gaps">
+							<ProhibitedNoteFormula v-model="prohibitedNotePattern">
+								<template #caption>{{ i18n.ts._prohibitedNote.description }}</template>
+							</ProhibitedNoteFormula>
+							<MkButton primary @click="save_prohibitedNotePattern">{{ i18n.ts.save }}</MkButton>
+						</div>
+					</MkFolder>
+				</SearchMarker>
+
 				<SearchMarker :keywords="['silenced', 'servers', 'hosts']">
 					<MkFolder>
 						<template #icon><SearchIcon><i class="ti ti-eye-off"></i></SearchIcon></template>
@@ -157,8 +184,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { ref, computed } from 'vue';
 import * as Misskey from 'misskey-js';
 import XServerRules from './server-rules.vue';
+import ProhibitedNoteFormula from './ProhibitedNoteFormula.vue';
 import MkSwitch from '@/components/MkSwitch.vue';
-import MkInput from '@/components/MkInput.vue';
 import MkTextarea from '@/components/MkTextarea.vue';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
@@ -191,6 +218,8 @@ const prohibitedWords = ref(meta.prohibitedWords.join('\n'));
 const prohibitedWordsForNameOfUser = ref(meta.prohibitedWordsForNameOfUser.join('\n'));
 const hiddenTags = ref(meta.hiddenTags.join('\n'));
 const preservedUsernames = ref(meta.preservedUsernames.join('\n'));
+const usernameEntropyTable = ref(meta.usernameEntropyTable ? JSON.stringify(meta.usernameEntropyTable) : '');
+const prohibitedNotePattern = ref(meta.prohibitedNotePattern);
 const blockedHosts = ref(meta.blockedHosts.join('\n'));
 const silencedHosts = ref(meta.silencedHosts?.join('\n') ?? '');
 const mediaSilencedHosts = ref(meta.mediaSilencedHosts.join('\n'));
@@ -237,6 +266,27 @@ function save_preservedUsernames() {
 	});
 }
 
+function parse_usernameEntropyTable(): { result: 'ok', value } | { result: 'err', error } {
+	try {
+		return { result: 'ok', value: usernameEntropyTable.value !== '' ? JSON.parse(usernameEntropyTable.value) : null };
+	} catch (err) {
+		os.alert({ type: 'error', title: 'Json parse error', text: 'Could not parse as JSON' });
+		return { result: 'err', error: err };
+	}
+}
+
+function save_usernameEntropyTable() {
+	const table = parse_usernameEntropyTable();
+	if (table.result !== 'ok') {
+		return;
+	}
+	os.apiWithDialog('admin/update-meta', {
+		usernameEntropyTable: table.value,
+	}).then(() => {
+		fetchInstance(true);
+	});
+}
+
 function save_sensitiveWords() {
 	os.apiWithDialog('admin/update-meta', {
 		sensitiveWords: sensitiveWords.value.split('\n'),
@@ -264,6 +314,14 @@ function save_prohibitedWordsForNameOfUser() {
 function save_hiddenTags() {
 	os.apiWithDialog('admin/update-meta', {
 		hiddenTags: hiddenTags.value.split('\n'),
+	}).then(() => {
+		fetchInstance(true);
+	});
+}
+
+function save_prohibitedNotePattern() {
+	os.apiWithDialog('admin/update-meta', {
+		prohibitedNotePattern: prohibitedNotePattern.value,
 	}).then(() => {
 		fetchInstance(true);
 	});
