@@ -1,3 +1,8 @@
+## 2026.9.0-geoplanetary.11a
+
+### Client
+- Fix: ロールポリシーの設定が一部でできないのを修正
+
 ## 2026.9.0-geoplanetary.11
 
 ### General
