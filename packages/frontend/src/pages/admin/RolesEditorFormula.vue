@@ -60,7 +60,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<MkInput v-else-if="v.type === 'followersLessThanOrEq' || v.type === 'followersMoreThanOrEq' || v.type === 'followingLessThanOrEq' || v.type === 'followingMoreThanOrEq' || v.type === 'notesLessThanOrEq' || v.type === 'notesMoreThanOrEq' || v.type === 'tagCountIs' || v.type === 'tagCountMoreThanOrEq' || v.type === 'tagCountLessThanOrEq' || v.type === 'fieldCountIs' || v.type === 'fieldCountMoreThanOrEq' || v.type === 'fieldCountLessThanOrEq'" v-model="v.value" type="number">
 	</MkInput>
 
-	<MkInput v-else-if="v.type === 'usernameMatchOf' || v.type ==='nameMatchOf' || v.type ==='hostMatchOf' || v.type ==='hasTagMatchOf' || v.type ==='emailMatchOf' || v.type ==='hasFieldNameMatchOf' || v.type ==='hasFieldValueMatchOf'" v-model="v.pattern" type="text">
+	<MkInput v-else-if="v.type === 'usernameMatchOf' || v.type ==='nameMatchOf' || v.type ==='hostMatchOf' || v.type === 'descriptionMatchOf' || v.type ==='hasTagMatchOf' || v.type ==='emailMatchOf' || v.type ==='hasFieldNameMatchOf' || v.type ==='hasFieldValueMatchOf'" v-model="v.pattern" type="text">
 		<template #caption>{{ i18n.ts._role.patternEditDescription }}</template>
 	</MkInput>
 
@@ -157,6 +157,7 @@ const typeDef = [
 	{ label: i18n.ts._role._condition.avatarLikelyBlurhash, value: 'avatarLikelyBlurhash' },
 	{ label: i18n.ts._role._condition.bannerUnset, value: 'bannerUnset' },
 	{ label: i18n.ts._role._condition.bannerLikelyBlurhash, value: 'bannerLikelyBlurhash' },
+	{ label: i18n.ts._role._condition.descriptionMatchOf, value: 'descriptionMatchOf' },
 	{ label: i18n.ts._role._condition.hasTags, value: 'hasTags' },
 	{ label: i18n.ts._role._condition.tagCountIs, value: 'tagCountIs' },
 	{ label: i18n.ts._role._condition.tagCountMoreThanOrEq, value: 'tagCountMoreThanOrEq' },
@@ -208,6 +209,7 @@ const typeModelForMkSelect = computed<GetMkSelectValueTypesFromDef<typeof typeDe
 			case 'notesMoreThanOrEq': newValue = { type: 'notesMoreThanOrEq', value: 10 }; break;
 			case 'avatarLikelyBlurhash': newValue = { type: 'avatarLikelyBlurhash', hash: '', diff: 0 }; break;
 			case 'bannerLikelyBlurhash': newValue = { type: 'bannerLikelyBlurhash', hash: '', diff: 0 }; break;
+			case 'descriptionMatchOf': newValue = { type: 'descriptionMatchOf', pattern: '' }; break;
 			case 'tagCountIs': newValue = { type: 'tagCountIs', value: 10 }; break;
 			case 'tagCountMoreThanOrEq': newValue = { type: 'tagCountMoreThanOrEq', value: 10 }; break;
 			case 'tagCountLessThanOrEq': newValue = { type: 'tagCountLessThanOrEq', value: 10 }; break;

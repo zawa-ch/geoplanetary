@@ -54,16 +54,24 @@ export class GlobalTimelineChannel extends Channel {
 
 		if (note.visibility !== 'public') return;
 		if (note.channelId != null) return;
-		if (note.user.requireSigninToViewContents && this.user == null) return;
-		if (note.renote && note.renote.user.requireSigninToViewContents && this.user == null) return;
-		if (note.reply && note.reply.user.requireSigninToViewContents && this.user == null) return;
+		const noteUserPolicies = await this.roleService.getUserPolicies(note.userId);
+		const renoteUserPolicies = note.renote ? await this.roleService.getUserPolicies(note.renote.userId) : undefined;
+		const replyUserPolicies = note.reply ? await this.roleService.getUserPolicies(note.reply.userId) : undefined;
+		if (noteUserPolicies.requireSigninToViewContents === 'force-enable' && this.user == null) return;
+		if (renoteUserPolicies?.requireSigninToViewContents === 'force-enable' && this.user == null) return;
+		if (replyUserPolicies?.requireSigninToViewContents === 'force-enable' && this.user == null) return;
+		if (noteUserPolicies.requireSigninToViewContents === 'leave' && note.user.requireSigninToViewContents && this.user == null) return;
+		if (renoteUserPolicies?.requireSigninToViewContents === 'leave' && note.renote && note.renote.user.requireSigninToViewContents && this.user == null) return;
+		if (replyUserPolicies?.requireSigninToViewContents === 'leave' && note.reply && note.reply.user.requireSigninToViewContents && this.user == null) return;
 
 		if (isRenotePacked(note) && !isQuotePacked(note) && !this.withRenotes) return;
 
 		if (this.isNoteMutedOrBlocked(note)) return;
 
-		const { shouldSkip } = await this.noteStreamingHidingService.processHiding(note, this.user?.id ?? null);
-		if (shouldSkip) return;
+		const filtered = await this.noteStreamingHidingService.filter(note, this.user?.id ?? null);
+		if (!filtered) return;
+		// eslint-disable-next-line no-param-reassign -- これ以降元の Note オブジェクトは見てはいけないので、いっそ再代入した方が安全
+		note = filtered;
 
 		if (this.user) {
 			if (isRenotePacked(note) && !isQuotePacked(note)) {

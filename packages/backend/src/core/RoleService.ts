@@ -21,6 +21,7 @@ import type {
 } from '@/models/_.js';
 import { MemoryKVCache, MemorySingleCache } from '@/misc/cache.js';
 import type { MiUser } from '@/models/User.js';
+import type { Config } from '@/config.js';
 import { DI } from '@/di-symbols.js';
 import { bindThis } from '@/decorators.js';
 import { CacheService } from '@/core/CacheService.js';
@@ -33,7 +34,6 @@ import { ModerationLogService } from '@/core/ModerationLogService.js';
 import type { Packed } from '@/misc/json-schema.js';
 import { FanoutTimelineService } from '@/core/FanoutTimelineService.js';
 import { NotificationService } from '@/core/NotificationService.js';
-import type { Config } from '@/config.js';
 import { calcEntropy } from '@/misc/string-entropy.js';
 import { FederatedInstanceService } from './FederatedInstanceService.js';
 import { UtilityService } from './UtilityService.js';
@@ -62,6 +62,7 @@ export type RolePolicies = {
 	canSearchUsers: boolean;
 	canUseTranslator: boolean;
 	canHideAds: boolean;
+	canCreateChannel: boolean;
 	driveWritable: boolean;
 	driveCapacityMb: number;
 	maxFileSizeMb: number;
@@ -79,6 +80,9 @@ export type RolePolicies = {
 	userEachUserListsLimit: number;
 	rateLimitFactor: number;
 	avatarDecorationLimit: number;
+	canFollowing: boolean;
+	canFollowedFromOthers: boolean;
+	requireSigninToViewContents: 'leave' | 'force-enable' | 'force-disable';
 	canImportAntennas: boolean;
 	canImportBlocking: boolean;
 	canImportFollowing: boolean;
@@ -113,6 +117,7 @@ export const DEFAULT_POLICIES: RolePolicies = {
 	canSearchUsers: true,
 	canUseTranslator: true,
 	canHideAds: false,
+	canCreateChannel: true,
 	driveWritable: true,
 	driveCapacityMb: 100,
 	maxFileSizeMb: 30,
@@ -130,6 +135,9 @@ export const DEFAULT_POLICIES: RolePolicies = {
 	userEachUserListsLimit: 50,
 	rateLimitFactor: 1,
 	avatarDecorationLimit: 1,
+	canFollowing: true,
+	canFollowedFromOthers: true,
+	requireSigninToViewContents: 'leave',
 	canImportAntennas: false,
 	canImportBlocking: false,
 	canImportFollowing: false,
@@ -154,8 +162,8 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 	private roleAssignmentByUserIdCache: MemoryKVCache<MiRoleAssignment[]>;
 	private notificationService: NotificationService;
 
-	public static AlreadyAssignedError = class extends Error {};
-	public static NotAssignedError = class extends Error {};
+	public static AlreadyAssignedError = class extends Error { };
+	public static NotAssignedError = class extends Error { };
 
 	constructor(
 		private moduleRef: ModuleRef,
@@ -417,7 +425,7 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 						const bhash = decode(user.avatarBlurhash, 5, 5);
 						const k = decode(value.hash, 5, 5);
 						return bhash.reduce((v, j, n) => v + (j >= k[n] ? j - k[n] : k[n] - j), 0) <= value.diff;
-					} catch (e) {
+					} catch (_) {
 						return false;
 					}
 				}
@@ -430,9 +438,12 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 						const bhash = decode(user.bannerBlurhash, 5, 5);
 						const k = decode(value.hash, 5, 5);
 						return bhash.reduce((v, j, n) => v + (j >= k[n] ? j - k[n] : k[n] - j), 0) <= value.diff;
-					} catch (e) {
+					} catch (_) {
 						return false;
 					}
+				}
+				case 'descriptionMatchOf': {
+					return profile ? this.utilityService.isKeyWordIncluded(profile.description ?? '', [value.pattern]) : false;
 				}
 				case 'hasTags': {
 					return user.tags.length > 0;
@@ -536,7 +547,7 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 		const roles = await this.getUserRoles(userId);
 
 		function calc<T extends keyof RolePolicies>(name: T, aggregate: (values: RolePolicies[T][]) => RolePolicies[T]) {
-			if (roles.length === 0) return basePolicies[name];
+			if (roles.length === 0) return aggregate([basePolicies[name]]);
 
 			const policies = roles.map(role => role.policies[name] ?? { priority: 0, useDefault: true });
 
@@ -554,6 +565,8 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			if (vs.some(v => v === 'readonly')) return 'readonly';
 			return 'unavailable';
 		}
+
+		const serverMaxFileSizeMb = Math.floor(this.config.maxFileSize / (1024 * 1024));
 
 		return {
 			gtlAvailable: calc('gtlAvailable', vs => vs.some(v => v === true)),
@@ -577,9 +590,10 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			canSearchUsers: calc('canSearchUsers', vs => vs.some(v => v === true)),
 			canUseTranslator: calc('canUseTranslator', vs => vs.some(v => v === true)),
 			canHideAds: calc('canHideAds', vs => vs.some(v => v === true)),
+			canCreateChannel: calc('canCreateChannel', vs => vs.some(v => v === true)),
 			driveWritable: calc('driveWritable', vs => vs.some(v => v === true)),
 			driveCapacityMb: calc('driveCapacityMb', vs => Math.max(...vs)),
-			maxFileSizeMb: calc('maxFileSizeMb', vs => Math.max(...vs)),
+			maxFileSizeMb: calc('maxFileSizeMb', vs => Math.min(serverMaxFileSizeMb, Math.max(...vs))),
 			alwaysMarkNsfw: calc('alwaysMarkNsfw', vs => vs.every(v => v === true)),
 			canUpdateBioMedia: calc('canUpdateBioMedia', vs => vs.some(v => v === true)),
 			pinLimit: calc('pinLimit', vs => Math.max(...vs)),
@@ -594,6 +608,13 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			userEachUserListsLimit: calc('userEachUserListsLimit', vs => Math.max(...vs)),
 			rateLimitFactor: calc('rateLimitFactor', vs => Math.min(...vs)),
 			avatarDecorationLimit: calc('avatarDecorationLimit', vs => Math.max(...vs)),
+			canFollowing: calc('canFollowing', vs => vs.some(v => v === true)),
+			canFollowedFromOthers: calc('canFollowedFromOthers', vs => vs.some(v => v === true)),
+			requireSigninToViewContents: calc('requireSigninToViewContents', vs => {
+				const on = vs.some(v => v === 'force-enable');
+				const off = vs.some(v => v === 'force-disable');
+				return on && !off ? 'force-enable' : off && !on ? 'force-disable' : 'leave';
+			}),
 			canImportAntennas: calc('canImportAntennas', vs => vs.some(v => v === true)),
 			canImportBlocking: calc('canImportBlocking', vs => vs.some(v => v === true)),
 			canImportFollowing: calc('canImportFollowing', vs => vs.some(v => v === true)),
@@ -703,7 +724,8 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			roleId: In(administratorRoles.map(r => r.id)),
 		}) : [];
 		// TODO: isRootなアカウントも含める
-		return assigns.map(a => a.userId);
+		// Setを経由して重複を除去（ユーザIDは重複する可能性があるので）
+		return [...new Set(assigns.map(a => a.userId))].sort((x, y) => x.localeCompare(y));
 	}
 
 	@bindThis

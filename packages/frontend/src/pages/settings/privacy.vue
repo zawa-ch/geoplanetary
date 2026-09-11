@@ -6,7 +6,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <SearchMarker path="/settings/privacy" :label="i18n.ts.privacy" :keywords="['privacy']" icon="ti ti-lock-open">
 	<div class="_gaps_m">
-		<MkFeatureBanner icon="/client-assets/unlocked_3d.png" color="#aeff00">
+		<MkFeatureBanner icon="/fluent-emoji/1f513.png" color="#aeff00">
 			<SearchText>{{ i18n.ts._settings.privacyBanner }}</SearchText>
 		</MkFeatureBanner>
 
@@ -93,15 +93,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<template #label><SearchLabel>{{ i18n.ts.lockdown }}</SearchLabel></template>
 
 				<div class="_gaps_m">
-					<SearchMarker :keywords="['login', 'signin']">
-						<MkSwitch :modelValue="requireSigninToViewContents" @update:modelValue="update_requireSigninToViewContents">
-							<template #label><SearchLabel>{{ i18n.ts._accountSettings.requireSigninToViewContents }}</SearchLabel></template>
-							<template #caption>
-								<div>{{ i18n.ts._accountSettings.requireSigninToViewContentsDescription1 }}</div>
-								<div><i class="ti ti-alert-triangle" style="color: var(--MI_THEME-warn);"></i> {{ i18n.ts._accountSettings.requireSigninToViewContentsDescription2 }}</div>
-							</template>
-						</MkSwitch>
-					</SearchMarker>
+					<MkInfo v-if="$i.policies.requireSigninToViewContents !== 'leave'">{{ i18n.ts._settings.settingsEnforcedByPolicy }}</MkInfo>
+					<MkDisableSection :disabled="$i.policies.requireSigninToViewContents !== 'leave'">
+						<SearchMarker :keywords="['login', 'signin']">
+							<MkSwitch :modelValue="requireSigninToViewContents" @update:modelValue="update_requireSigninToViewContents">
+								<template #label><SearchLabel>{{ i18n.ts._accountSettings.requireSigninToViewContents }}</SearchLabel></template>
+								<template #caption>
+									<div>{{ i18n.ts._accountSettings.requireSigninToViewContentsDescription1 }}</div>
+									<div><i class="ti ti-alert-triangle" style="color: var(--MI_THEME-warn);"></i> {{ i18n.ts._accountSettings.requireSigninToViewContentsDescription2 }}</div>
+								</template>
+							</MkSwitch>
+						</SearchMarker>
+					</MkDisableSection>
 
 					<SearchMarker :keywords="['follower']">
 						<FormSlot>

@@ -6,7 +6,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <SearchMarker path="/settings/preferences" :label="i18n.ts.preferences" :keywords="['general', 'preferences']" icon="ti ti-adjustments">
 	<div class="_gaps_m">
-		<MkFeatureBanner icon="/client-assets/gear_3d.png" color="#00ff9d">
+		<MkFeatureBanner icon="/fluent-emoji/2699.png" color="#00ff9d">
 			<SearchText>{{ i18n.ts._settings.preferencesBanner }}</SearchText>
 		</MkFeatureBanner>
 
@@ -301,21 +301,22 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</MkPreferenceContainer>
 							</SearchMarker>
 
-							<SearchMarker :keywords="['ticker', 'information', 'label', 'instance', 'server', 'host', 'federation']">
-								<MkPreferenceContainer k="instanceTicker">
-									<MkSelect
-										v-if="instance.federation !== 'none'"
-										v-model="instanceTicker"
-										:items="[
-											{ label: i18n.ts._instanceTicker.none, value: 'none' },
-											{ label: i18n.ts._instanceTicker.remote, value: 'remote' },
-											{ label: i18n.ts._instanceTicker.always, value: 'always' },
-										]"
-									>
-										<template #label><SearchLabel>{{ i18n.ts.instanceTicker }}</SearchLabel></template>
-									</MkSelect>
-								</MkPreferenceContainer>
-							</SearchMarker>
+							<template v-if="instance.federation !== 'none'">
+								<SearchMarker :keywords="['ticker', 'information', 'label', 'instance', 'server', 'host', 'federation']">
+									<MkPreferenceContainer k="instanceTicker">
+										<MkSelect
+											v-model="instanceTicker"
+											:items="[
+												{ label: i18n.ts._instanceTicker.none, value: 'none' },
+												{ label: i18n.ts._instanceTicker.remote, value: 'remote' },
+												{ label: i18n.ts._instanceTicker.always, value: 'always' },
+											]"
+										>
+											<template #label><SearchLabel>{{ i18n.ts.instanceTicker }}</SearchLabel></template>
+										</MkSelect>
+									</MkPreferenceContainer>
+								</SearchMarker>
+							</template>
 
 							<SearchMarker :keywords="['attachment', 'image', 'photo', 'picture', 'media', 'thumbnail', 'nsfw', 'sensitive', 'display', 'show', 'hide', 'visibility']">
 								<MkPreferenceContainer k="nsfw">
@@ -397,6 +398,34 @@ SPDX-License-Identifier: AGPL-3.0-only
 									</div>
 								</MkFolder>
 							</MkDisableSection>
+						</SearchMarker>
+
+						<SearchMarker :keywords="['postform', 'display', 'remain', 'characters', 'chars']">
+							<MkPreferenceContainer k="postformRemainCharacterDisplay">
+								<MkRadios
+									v-model="postformRemainCharacterDisplay" :options="[
+										{value: 'counter', label: i18n.ts.postformRemainCharacterDisplayCounter},
+										{value: 'counterLegacy', label: i18n.ts.postformRemainCharacterDisplayCounterLegacy},
+										{value: 'meter', label: i18n.ts.postformRemainCharacterDisplayMeter},
+									]"
+								>
+									<template #label><SearchLabel>{{ i18n.ts.postformRemainCharacterDisplay }}</SearchLabel><span class="_tips">Geoplanetary unique</span></template>
+								</MkRadios>
+							</MkPreferenceContainer>
+						</SearchMarker>
+
+						<SearchMarker :keywords="['postform', 'preview', 'background', 'style']">
+							<MkPreferenceContainer k="postformPreviewBackgroundStyle">
+								<MkRadios
+									v-model="postformPreviewBackgroundStyle" :options="[
+										{value: 'darken', label: i18n.ts.postformPreviewBackgroundStyleObliqueDarken},
+										{value: 'obliqueStripe', label: i18n.ts.postformPreviewBackgroundStyleObliqueStripe},
+										{value: 'plain', label: i18n.ts.postformPreviewBackgroundStylePlain},
+									]"
+								>
+									<template #label><SearchLabel>{{ i18n.ts.postformPreviewBackgroundStyle }}</SearchLabel><span class="_tips">Geoplanetary unique</span></template>
+								</MkRadios>
+							</MkPreferenceContainer>
 						</SearchMarker>
 					</div>
 				</MkFolder>
@@ -498,7 +527,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<template #icon><SearchIcon><i class="ti ti-accessible"></i></SearchIcon></template>
 
 					<div class="_gaps_m">
-						<MkFeatureBanner icon="/client-assets/mens_room_3d.png" color="#0011ff">
+						<MkFeatureBanner icon="/fluent-emoji/1f6b9.png" color="#0011ff">
 							<SearchText>{{ i18n.ts._settings.accessibilityBanner }}</SearchText>
 						</MkFeatureBanner>
 
@@ -627,24 +656,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<MkSwitch v-model="useSystemFont">
 								<template #label><SearchLabel>{{ i18n.ts.useSystemFont }}</SearchLabel></template>
 							</MkSwitch>
-						</SearchMarker>
-
-						<SearchMarker :keywords="['postform', 'display', 'remain', 'characters', 'chars']">
-							<MkRadios v-model="postformRemainCharacterDisplay">
-								<template #label>{{ i18n.ts.postformRemainCharacterDisplay }}<span class="_tips">Geoplanetary unique</span></template>
-								<option value="counter">{{ i18n.ts.postformRemainCharacterDisplayCounter }}</option>
-								<option value="counterLegacy">{{ i18n.ts.postformRemainCharacterDisplayCounterLegacy }}</option>
-								<option value="meter">{{ i18n.ts.postformRemainCharacterDisplayMeter }}</option>
-							</MkRadios>
-						</SearchMarker>
-
-						<SearchMarker :keywords="['postform', 'preview', 'background', 'style']">
-							<MkRadios v-model="postformPreviewBackgroundStyle">
-								<template #label>{{ i18n.ts.postformPreviewBackgroundStyle }}<span class="_tips">Geoplanetary unique</span></template>
-								<option value="darken">{{ i18n.ts.postformPreviewBackgroundStyleObliqueDarken }}</option>
-								<option value="obliqueStripe">{{ i18n.ts.postformPreviewBackgroundStyleObliqueStripe }}</option>
-								<option value="plain">{{ i18n.ts.postformPreviewBackgroundStylePlain }}</option>
-							</MkRadios>
 						</SearchMarker>
 					</div>
 				</MkFolder>
@@ -1069,9 +1080,9 @@ function downloadEmojiIndex(lang: typeof emojiIndexLangs[number]) {
 
 		function download() {
 			switch (lang) {
-				case 'en-US': return import('../../unicode-emoji-indexes/en-US.json').then(x => x.default);
-				case 'ja-JP': return import('../../unicode-emoji-indexes/ja-JP.json').then(x => x.default);
-				case 'ja-JP_hira': return import('../../unicode-emoji-indexes/ja-JP_hira.json').then(x => x.default);
+				case 'en-US': return import('@misskey-dev/emoji-data/indexes/en-US.json').then(x => x.default);
+				case 'ja-JP': return import('@misskey-dev/emoji-data/indexes/ja-JP.json').then(x => x.default);
+				case 'ja-JP_hira': return import('@misskey-dev/emoji-data/indexes/ja-JP_hira.json').then(x => x.default);
 				default: throw new Error('unrecognized lang: ' + lang);
 			}
 		}

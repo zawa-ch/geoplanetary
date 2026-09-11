@@ -8,6 +8,7 @@ import type { Repository } from 'typeorm';
 process.env.NODE_ENV = 'test';
 
 import * as assert from 'assert';
+import { describe, beforeAll, afterAll, test } from 'vitest';
 import { expect } from '@jest/globals';
 import { api, castAsError, initTestDb, post, role, signup, uploadFile, uploadUrl } from '../utils.js';
 import type * as misskey from 'misskey-js';
