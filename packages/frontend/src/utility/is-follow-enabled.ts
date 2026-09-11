@@ -7,5 +7,5 @@ import * as Misskey from 'misskey-js';
 import { $i } from '@/i';
 
 export function isFollowEnabled(user: Misskey.entities.UserDetailed): boolean {
-	return (user.id !== $i?.id) && !(user.isBlocking ?? false) && !(user.isBlocked ?? false) && !(user.isSuspended);
+	return ($i && user.id !== $i.id && $i.policies.canFollowing && !(user.isBlocking ?? false) && !(user.isBlocked ?? false) && !(user.isSuspended) && user.canFollowedFromOthers) ?? false;
 }

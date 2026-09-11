@@ -187,7 +187,7 @@ export const packedRoleCondFormulaValuePatternMatchSchema = {
 		type: {
 			type: 'string',
 			nullable: false, optional: false,
-			enum: ['usernameMatchOf', 'nameMatchOf', 'hostMatchOf', 'emailMatchOf', 'hasTagMatchOf', 'hasFieldNameMatchOf', 'hasFieldValueMatchOf'],
+			enum: ['usernameMatchOf', 'nameMatchOf', 'hostMatchOf', 'emailMatchOf', 'descriptionMatchOf', 'hasTagMatchOf', 'hasFieldNameMatchOf', 'hasFieldValueMatchOf'],
 		},
 		pattern: {
 			type: 'string',
@@ -437,6 +437,19 @@ export const packedRolePoliciesSchema = {
 		avatarDecorationLimit: {
 			type: 'integer',
 			optional: false, nullable: false,
+		},
+		canFollowing: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
+		canFollowedFromOthers: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
+		requireSigninToViewContents: {
+			type: 'string',
+			optional: false, nullable: false,
+			enum: ['leave', 'force-enable', 'force-disable'],
 		},
 		canImportAntennas: {
 			type: 'boolean',

@@ -4124,6 +4124,7 @@ export type components = {
             isFollowed?: boolean;
             hasPendingFollowRequestFromYou?: boolean;
             hasPendingFollowRequestToYou?: boolean;
+            canFollowedFromOthers?: boolean;
             isBlocking?: boolean;
             isBlocked?: boolean;
             isMuted?: boolean;
@@ -5372,7 +5373,7 @@ export type components = {
         RoleCondFormulaValuePatternMatch: {
             id: string;
             /** @enum {string} */
-            type: 'usernameMatchOf' | 'nameMatchOf' | 'hostMatchOf' | 'emailMatchOf' | 'hasTagMatchOf' | 'hasFieldNameMatchOf' | 'hasFieldValueMatchOf';
+            type: 'usernameMatchOf' | 'nameMatchOf' | 'hostMatchOf' | 'emailMatchOf' | 'descriptionMatchOf' | 'hasTagMatchOf' | 'hasFieldNameMatchOf' | 'hasFieldValueMatchOf';
             pattern: string;
         };
         RoleCondFormulaValueEntropy: {
@@ -5475,6 +5476,10 @@ export type components = {
             userEachUserListsLimit: number;
             rateLimitFactor: number;
             avatarDecorationLimit: number;
+            canFollowing: boolean;
+            canFollowedFromOthers: boolean;
+            /** @enum {string} */
+            requireSigninToViewContents: 'leave' | 'force-enable' | 'force-disable';
             canImportAntennas: boolean;
             canImportBlocking: boolean;
             canImportFollowing: boolean;

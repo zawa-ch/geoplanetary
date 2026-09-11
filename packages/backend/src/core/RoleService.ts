@@ -80,6 +80,9 @@ export type RolePolicies = {
 	userEachUserListsLimit: number;
 	rateLimitFactor: number;
 	avatarDecorationLimit: number;
+	canFollowing: boolean;
+	canFollowedFromOthers: boolean;
+	requireSigninToViewContents: 'leave' | 'force-enable' | 'force-disable';
 	canImportAntennas: boolean;
 	canImportBlocking: boolean;
 	canImportFollowing: boolean;
@@ -132,6 +135,9 @@ export const DEFAULT_POLICIES: RolePolicies = {
 	userEachUserListsLimit: 50,
 	rateLimitFactor: 1,
 	avatarDecorationLimit: 1,
+	canFollowing: true,
+	canFollowedFromOthers: true,
+	requireSigninToViewContents: 'leave',
 	canImportAntennas: false,
 	canImportBlocking: false,
 	canImportFollowing: false,
@@ -156,8 +162,8 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 	private roleAssignmentByUserIdCache: MemoryKVCache<MiRoleAssignment[]>;
 	private notificationService: NotificationService;
 
-	public static AlreadyAssignedError = class extends Error {};
-	public static NotAssignedError = class extends Error {};
+	public static AlreadyAssignedError = class extends Error { };
+	public static NotAssignedError = class extends Error { };
 
 	constructor(
 		private moduleRef: ModuleRef,
@@ -419,7 +425,7 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 						const bhash = decode(user.avatarBlurhash, 5, 5);
 						const k = decode(value.hash, 5, 5);
 						return bhash.reduce((v, j, n) => v + (j >= k[n] ? j - k[n] : k[n] - j), 0) <= value.diff;
-					} catch (e) {
+					} catch (_) {
 						return false;
 					}
 				}
@@ -432,9 +438,12 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 						const bhash = decode(user.bannerBlurhash, 5, 5);
 						const k = decode(value.hash, 5, 5);
 						return bhash.reduce((v, j, n) => v + (j >= k[n] ? j - k[n] : k[n] - j), 0) <= value.diff;
-					} catch (e) {
+					} catch (_) {
 						return false;
 					}
+				}
+				case 'descriptionMatchOf': {
+					return profile ? this.utilityService.isKeyWordIncluded(profile.description ?? '', [value.pattern]) : false;
 				}
 				case 'hasTags': {
 					return user.tags.length > 0;
@@ -599,6 +608,13 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			userEachUserListsLimit: calc('userEachUserListsLimit', vs => Math.max(...vs)),
 			rateLimitFactor: calc('rateLimitFactor', vs => Math.min(...vs)),
 			avatarDecorationLimit: calc('avatarDecorationLimit', vs => Math.max(...vs)),
+			canFollowing: calc('canFollowing', vs => vs.some(v => v === true)),
+			canFollowedFromOthers: calc('canFollowedFromOthers', vs => vs.some(v => v === true)),
+			requireSigninToViewContents: calc('requireSigninToViewContents', vs => {
+				const on = vs.some(v => v === 'force-enable');
+				const off = vs.some(v => v === 'force-disable');
+				return on && !off ? 'force-enable' : off && !on ? 'force-disable' : 'leave';
+			}),
 			canImportAntennas: calc('canImportAntennas', vs => vs.some(v => v === true)),
 			canImportBlocking: calc('canImportBlocking', vs => vs.some(v => v === true)),
 			canImportFollowing: calc('canImportFollowing', vs => vs.some(v => v === true)),

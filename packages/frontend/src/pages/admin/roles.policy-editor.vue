@@ -422,6 +422,43 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</template>
 		</XFolder>
 
+		<XFolder v-if="matchQuery([i18n.ts._role._options.canFollowing, 'canFollowing'])" v-model:policyMeta="policyMetaModel.canFollowing" :isBaseRole="isBaseRole" :readonly="readonly">
+			<template #label>{{ i18n.ts._role._options.canFollowing }}</template>
+			<template #valueText>{{ valuesModel.canFollowing ? i18n.ts.yes : i18n.ts.no }}</template>
+			<template #default="{ disabled }">
+				<MkSwitch v-model="valuesModel.canFollowing" :disabled="disabled">
+					<template #label>{{ i18n.ts.enable }}</template>
+				</MkSwitch>
+			</template>
+		</XFolder>
+
+		<XFolder v-if="matchQuery([i18n.ts._role._options.canFollowedFromOthers, 'canFollowedFromOthers'])" v-model:policyMeta="policyMetaModel.canFollowedFromOthers" :isBaseRole="isBaseRole" :readonly="readonly">
+			<template #label>{{ i18n.ts._role._options.canFollowedFromOthers }}</template>
+			<template #valueText>{{ valuesModel.canFollowedFromOthers ? i18n.ts.yes : i18n.ts.no }}</template>
+			<template #default="{ disabled }">
+				<MkSwitch v-model="valuesModel.canFollowedFromOthers" :disabled="disabled">
+					<template #label>{{ i18n.ts.enable }}</template>
+				</MkSwitch>
+			</template>
+		</XFolder>
+
+		<XFolder v-if="matchQuery([i18n.ts._role._options.requireSigninToViewContents, 'requireSigninToViewContents'])" v-model:policyMeta="policyMetaModel.requireSigninToViewContents" :isBaseRole="isBaseRole" :readonly="readonly">
+			<template #label>{{ i18n.ts._role._options.requireSigninToViewContents }}</template>
+			<template #valueText>{{ valuesModel.requireSigninToViewContents === 'force-enable' ?
+				i18n.ts._role._forcingOption.forceEnable : valuesModel.requireSigninToViewContents === 'force-disable' ?
+					i18n.ts._role._forcingOption.forceDisable : i18n.ts._role._forcingOption.leave }}</template>
+			<template #default="{ disabled }">
+				<MkSelect
+					v-model="valuesModel.requireSigninToViewContents" :disabled="disabled" :items="[
+						{ label: i18n.ts._role._forcingOption.leave, value: 'leave' },
+						{ label: i18n.ts._role._forcingOption.forceEnable, value: 'force-enable' },
+						{ label: i18n.ts._role._forcingOption.forceDisable, value: 'force-disable' },
+					]"
+				>
+				</MkSelect>
+			</template>
+		</XFolder>
+
 		<XFolder v-if="matchQuery([i18n.ts._role._options.canImportAntennas, 'canImportAntennas'])" v-model:policyMeta="policyMetaModel.canImportAntennas" :isBaseRole="isBaseRole" :readonly="readonly">
 			<template #label>{{ i18n.ts._role._options.canImportAntennas }}</template>
 			<template #valueText>{{ valuesModel.canImportAntennas ? i18n.ts.yes : i18n.ts.no }}</template>

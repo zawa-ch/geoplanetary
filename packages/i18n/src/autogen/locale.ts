@@ -6329,6 +6329,10 @@ export interface Locale extends ILocale {
          * 環境によっては有効化できない場合があります。
          */
         "settingsPersistence_description2": string;
+        /**
+         * この設定はポリシーによって強制されています。
+         */
+        "settingsEnforcedByPolicy": string;
         "_chat": {
             /**
              * 送信者の名前を表示
@@ -8194,6 +8198,20 @@ export interface Locale extends ILocale {
              */
             "high": string;
         };
+        "_forcingOption": {
+            /**
+             * ユーザーの設定を尊重する
+             */
+            "leave": string;
+            /**
+             * 強制的に有効化
+             */
+            "forceEnable": string;
+            /**
+             * 強制的に無効化
+             */
+            "forceDisable": string;
+        };
         "_options": {
             /**
              * グローバルタイムラインの閲覧
@@ -8363,6 +8381,18 @@ export interface Locale extends ILocale {
              * アイコンデコレーションの最大取付個数
              */
             "avatarDecorationLimit": string;
+            /**
+             * ユーザーからのフォローを許可
+             */
+            "canFollowing": string;
+            /**
+             * 他ユーザーによるユーザーのフォローを許可
+             */
+            "canFollowedFromOthers": string;
+            /**
+             * 非ログインユーザーからのコンテンツ表示制限
+             */
+            "requireSigninToViewContents": string;
             /**
              * アンテナのインポートを許可
              */
@@ -8577,6 +8607,10 @@ export interface Locale extends ILocale {
              * バナー画像のBlurhashが〜に近似
              */
             "bannerLikelyBlurhash": string;
+            /**
+             * 自己紹介が〜にマッチする
+             */
+            "descriptionMatchOf": string;
             /**
              * タグを含む
              */

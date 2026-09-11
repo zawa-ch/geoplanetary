@@ -50,9 +50,15 @@ export class RoleTimelineChannel extends Channel {
 				return;
 			}
 			if (note.visibility !== 'public') return;
-			if (note.user.requireSigninToViewContents && this.user == null) return;
-			if (note.renote && note.renote.user.requireSigninToViewContents && this.user == null) return;
-			if (note.reply && note.reply.user.requireSigninToViewContents && this.user == null) return;
+			const noteUserPolicies = await this.roleservice.getUserPolicies(note.userId);
+			const renoteUserPolicies = note.renote ? await this.roleservice.getUserPolicies(note.renote.userId) : undefined;
+			const replyUserPolicies = note.reply ? await this.roleservice.getUserPolicies(note.reply.userId) : undefined;
+			if (noteUserPolicies.requireSigninToViewContents === 'force-enable' && this.user == null) return;
+			if (renoteUserPolicies?.requireSigninToViewContents === 'force-enable' && this.user == null) return;
+			if (replyUserPolicies?.requireSigninToViewContents === 'force-enable' && this.user == null) return;
+			if (noteUserPolicies.requireSigninToViewContents === 'leave' && note.user.requireSigninToViewContents && this.user == null) return;
+			if (renoteUserPolicies?.requireSigninToViewContents === 'leave' && note.renote && note.renote.user.requireSigninToViewContents && this.user == null) return;
+			if (replyUserPolicies?.requireSigninToViewContents === 'leave' && note.reply && note.reply.user.requireSigninToViewContents && this.user == null) return;
 
 			if (this.isNoteMutedOrBlocked(note)) return;
 

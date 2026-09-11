@@ -268,6 +268,11 @@ type CondFormulaValueBannerLikelyBlurhash = {
 	diff: number;
 };
 
+type CondFormulaValueDescriptionMatchOf = {
+	type: 'descriptionMatchOf';
+	pattern: string;
+};
+
 type CondFormulaValueHasTags = {
 	type: 'hasTags';
 };
@@ -366,6 +371,7 @@ export type RoleCondFormulaValue = { id: string } & (
 	CondFormulaValueAvatarLikelyBlurhash |
 	CondFormulaValueBannerUnset |
 	CondFormulaValueBannerLikelyBlurhash |
+	CondFormulaValueDescriptionMatchOf |
 	CondFormulaValueHasTags |
 	CondFormulaValueHashtagCountIs |
 	CondFormulaValueHashtagCountMoreThanOrEq |
