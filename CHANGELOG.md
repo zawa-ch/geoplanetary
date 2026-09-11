@@ -1,3 +1,8 @@
+## 2026.9.0-geoplanetary.11b
+
+### General
+- Fix: 意図しない状況で投稿が非公開になるのを修正
+
 ## 2026.9.0-geoplanetary.11a
 
 ### Client
