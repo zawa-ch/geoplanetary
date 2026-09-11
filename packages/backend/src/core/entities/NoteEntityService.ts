@@ -137,7 +137,7 @@ export class NoteEntityService implements OnModuleInit {
 		// TODO: isVisibleForMe を使うようにしても良さそう(型違うけど)
 
 		const policies = await this.roleService.getUserPolicies(packedNote.userId);
-		if (policies.requireSigninToViewContents === 'force-enable') {
+		if (policies.requireSigninToViewContents === 'force-enable' && meId == null) {
 			return true;
 		}
 

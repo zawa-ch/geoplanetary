@@ -69,7 +69,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			});
 
 			const policies = await this.roleService.getUserPolicies(note.userId);
-			if (policies.requireSigninToViewContents === 'force-enable') {
+			if (policies.requireSigninToViewContents === 'force-enable' && me == null) {
 				throw new ApiError(meta.errors.contentRestrictedByServer);
 			}
 
